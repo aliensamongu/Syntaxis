@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Syntaxis v2.7 | Multi-Select & Final Baseline Kit</title>
+    <title>Syntaxis v2.9 | Elliptical Words & Full Kit</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
     <style>
         :root { --teal: #1a535c; --accent: #3498db; --gold: #d4c8aa; }
@@ -18,12 +18,14 @@
         #workspace { flex-grow: 1; padding: 30px; display: flex; justify-content: center; background: #95a5a6; }
         canvas { box-shadow: 0 20px 50px rgba(0,0,0,0.4); border: 1px solid var(--gold); }
         .tool-title { font-size: 10px; color: #7f8c8d; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 15px; font-weight: bold; border-bottom: 1px solid #eee; }
-        .palette-item { border: 1px solid #ddd; padding: 8px; margin-top: 5px; cursor: pointer; background: #fff; display: flex; justify-content: center; border-radius: 8px; }
+        .palette-item { border: 1px solid #ddd; padding: 8px; margin-top: 5px; cursor: pointer; background: #fff; display: flex; justify-content: center; border-radius: 8px; transition: 0.2s; }
         .palette-item svg { width: 60px; height: 40px; overflow: visible; }
         .palette-item path, .palette-item line, .palette-item polyline { stroke: var(--teal); fill: none; stroke-width: 2.5; stroke-linecap: round; }
-        button { padding: 8px 14px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; margin-bottom: 10px; width: 100%; }
+        button { padding: 8px 14px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; margin-bottom: 8px; width: 100%; }
         .btn-blue { background: var(--accent); color: white; }
         .btn-red { background: #e74c3c; color: white; }
+        .btn-green { background: #27ae60; color: white; }
+        .btn-orange { background: #f39c12; color: white; }
     </style>
 </head>
 <body>
@@ -40,8 +42,12 @@
 
     <div id="main-layout">
         <div id="toolbar">
+            <div class="tool-title">Project Management</div>
+            <button class="btn-green" onclick="saveProject()">SAVE PROJECT</button>
+            <button class="btn-green" onclick="loadProject()">LOAD PROJECT</button>
             <button class="btn-red" onclick="deleteSelected()">DELETE SELECTED</button>
             <button class="btn-blue" onclick="groupSelected()">GROUP SELECTED</button>
+            <button class="btn-orange" onclick="addEllipsis()">+ ELLIPTICAL WORD</button>
             
             <div class="tool-title">Baseline Elements</div>
             <div class="palette-item" title="Subject/Predicate" onclick="addShape('subj-pred')"><svg viewBox="0 0 100 60"><line x1="10" y1="30" x2="90" y2="30"/><line x1="50" y1="10" x2="50" y2="50"/></svg></div>
@@ -67,16 +73,41 @@
         height: 700, 
         backgroundColor: '#f4ecd8',
         preserveObjectStacking: true,
-        selection: true // RESTORED MULTI-SELECT DRAG
+        selection: true 
     });
     
     fabric.Object.prototype.set({ 
         strokeUniform: true, cornerSize: 12, cornerColor: '#3498db', transparentCorners: false, cornerStyle: 'circle' 
     });
 
+    function addEllipsis() {
+        const word = prompt("Enter elliptical word:");
+        if (word) {
+            const txt = new fabric.IText(`(${word})`, {
+                left: 200, top: 200, fontFamily: 'SBL Greek', fontSize: 24, fill: '#1a535c', fontStyle: 'italic'
+            });
+            canvas.add(txt).setActiveObject(txt).renderAll();
+        }
+    }
+
+    function saveProject() {
+        const json = JSON.stringify(canvas.toJSON(['bankIds']));
+        localStorage.setItem('syntaxisProject', json);
+        alert('Project saved!');
+    }
+
+    function loadProject() {
+        const json = localStorage.getItem('syntaxisProject');
+        if (json) {
+            canvas.loadFromJSON(json, () => {
+                canvas.requestRenderAll();
+                alert('Project loaded!');
+            });
+        }
+    }
+
     function groupSelected() {
-        if (!canvas.getActiveObject()) return;
-        if (canvas.getActiveObject().type !== 'activeSelection') return;
+        if (!canvas.getActiveObject() || canvas.getActiveObject().type !== 'activeSelection') return;
         canvas.getActiveObject().toGroup();
         canvas.requestRenderAll();
     }
