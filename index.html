@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Syntaxis v3.4</title>
+    <title>Syntaxis v3.5 | Precision Placement</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
     <style>
         :root { --teal: #1a535c; --accent: #3498db; --gold: #d4c8aa; }
@@ -10,10 +10,7 @@
         #app-root { display: flex; height: 100vh; flex-direction: column; }
         #top-panel { background: var(--teal); color: white; padding: 12px 25px; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
         #word-bank { display: flex; flex-wrap: wrap; gap: 10px; background: rgba(0,0,0,0.15); padding: 12px; border-radius: 8px; max-height: 80px; overflow-y: auto; margin-top: 10px; }
-        
-        /* Set Word Bank text to 14pt (approx 19px) */
         .word-item { cursor: pointer; font-size: 19px; color: white; padding: 3px 6px; border-radius: 4px; }
-        
         .word-item.selected { background: var(--accent); }
         .word-item.used { text-decoration: line-through; opacity: 0.3; }
         #main-layout { display: flex; flex-grow: 1; overflow: hidden; }
@@ -83,7 +80,9 @@
         cornerSize: 12, 
         cornerColor: '#3498db', 
         transparentCorners: false, 
-        cornerStyle: 'circle' 
+        cornerStyle: 'circle',
+        lockSkewingX: true, // Prevent angle distortion
+        lockSkewingY: true
     });
 
     let history = [];
@@ -115,15 +114,34 @@
         });
     }
 
+    // Keyboard Listeners for Undo, Delete, and Precision Arrow Movement
     window.addEventListener('keydown', (e) => {
         if (document.activeElement.tagName === 'INPUT') return;
-        if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
-            e.preventDefault();
-            undo();
-        }
-        if (e.key === 'Delete' || e.key === 'Backspace') {
-            e.preventDefault();
-            deleteSelected();
+        
+        const activeObj = canvas.getActiveObject();
+        const moveStep = e.shiftKey ? 10 : 1;
+
+        switch (e.key) {
+            case 'ArrowLeft':
+                if (activeObj) { activeObj.set('left', activeObj.left - moveStep); canvas.requestRenderAll(); e.preventDefault(); }
+                break;
+            case 'ArrowRight':
+                if (activeObj) { activeObj.set('left', activeObj.left + moveStep); canvas.requestRenderAll(); e.preventDefault(); }
+                break;
+            case 'ArrowUp':
+                if (activeObj) { activeObj.set('top', activeObj.top - moveStep); canvas.requestRenderAll(); e.preventDefault(); }
+                break;
+            case 'ArrowDown':
+                if (activeObj) { activeObj.set('top', activeObj.top + moveStep); canvas.requestRenderAll(); e.preventDefault(); }
+                break;
+            case 'z':
+                if (e.ctrlKey || e.metaKey) { e.preventDefault(); undo(); }
+                break;
+            case 'Delete':
+            case 'Backspace':
+                e.preventDefault();
+                deleteSelected();
+                break;
         }
     });
 
@@ -184,9 +202,10 @@
             ], { strokeUniform: true });
         }
         else if (type === 'do-marker') obj = new fabric.Polyline([{x:0,y:0}, {x:0,y:30}, {x:50,y:30}], s);
-        else if (type === 'slanted-mod') obj = new fabric.Polyline([{x:15,y:0}, {x:0,y:30}, {x:50,y:30}], s);
+        // lockUniScaling ensures the slanted angle stays consistent when resizing
+        else if (type === 'slanted-mod') obj = new fabric.Polyline([{x:15,y:0}, {x:0,y:30}, {x:50,y:30}], { ...s, lockUniScaling: true });
         else if (type === 'solid-line') obj = new fabric.Line([0,0,100,0], s);
-        else if (type === 'mod-hook') obj = new fabric.Polyline([{x:0,y:0}, {x:30,y:40}, {x:90,y:40}], s);
+        else if (type === 'mod-hook') obj = new fabric.Polyline([{x:0,y:0}, {x:30,y:40}, {x:90,y:40}], { ...s, lockUniScaling: true });
         else if (type === 'bracket-l') obj = new fabric.Polyline([{x:25,y:0}, {x:0,y:0}, {x:0,y:100}, {x:25,y:100}], s);
         else if (type === 'compound-shelf') obj = new fabric.Path('M 0 30 L 30 0 L 100 0 M 30 0 L 30 60 M 0 30 L 30 60 L 100 60', s);
 
@@ -230,7 +249,6 @@
     ws.addEventListener('drop', e => {
         const d = JSON.parse(e.dataTransfer.getData("text"));
         const ptr = canvas.getPointer(e);
-        // Canvas Text set to 14pt (19px)
         const txt = new fabric.IText(d.t, { left: ptr.x, top: ptr.y, fontSize: 19, fill: '#1a535c', bankIds: d.ids });
         canvas.add(txt).renderAll();
         d.ids.forEach(id => document.getElementById(id)?.classList.add('used'));
