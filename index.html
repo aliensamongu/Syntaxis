@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Syntaxis v3.5 | Precision Placement</title>
+    <title>Syntaxis v4.0 | High-Res Export</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
     <style>
         :root { --teal: #1a535c; --accent: #3498db; --gold: #d4c8aa; }
@@ -10,8 +10,8 @@
         #app-root { display: flex; height: 100vh; flex-direction: column; }
         #top-panel { background: var(--teal); color: white; padding: 12px 25px; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
         #word-bank { display: flex; flex-wrap: wrap; gap: 10px; background: rgba(0,0,0,0.15); padding: 12px; border-radius: 8px; max-height: 80px; overflow-y: auto; margin-top: 10px; }
-        .word-item { cursor: pointer; font-size: 19px; color: white; padding: 3px 6px; border-radius: 4px; }
-        .word-item.selected { background: var(--accent); }
+        .word-item { cursor: pointer; font-size: 19px; color: white; padding: 3px 6px; border-radius: 4px; transition: background 0.2s; }
+        .word-item.selected { background: var(--accent); border: 1px solid white; }
         .word-item.used { text-decoration: line-through; opacity: 0.3; }
         #main-layout { display: flex; flex-grow: 1; overflow: hidden; }
         #toolbar { width: 260px; background: #fdfdfd; border-right: 1px solid #95a5a6; padding: 20px; overflow-y: auto; z-index: 10; }
@@ -19,7 +19,7 @@
         canvas { box-shadow: 0 20px 50px rgba(0,0,0,0.4); border: 1px solid var(--gold); }
         .tool-title { font-size: 10px; color: #7f8c8d; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 15px; font-weight: bold; border-bottom: 1px solid #eee; }
         .palette-item { border: 1px solid #ddd; padding: 8px; margin-top: 5px; cursor: pointer; background: #fff; display: flex; justify-content: center; border-radius: 8px; }
-        .palette-item svg { width: 60px; height: 40px; overflow: visible; }
+        .palette-item svg { width: 60px; height: 40px; overflow: visible; pointer-events: none; }
         .palette-item path, .palette-item line, .palette-item polyline { stroke: var(--teal); fill: none; stroke-width: 2; stroke-linecap: round; }
         button { padding: 8px 14px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; margin-bottom: 8px; width: 100%; transition: 0.2s; }
         .btn-blue { background: var(--accent); color: white; }
@@ -42,26 +42,30 @@
 
     <div id="main-layout">
         <div id="toolbar">
-            <div class="tool-title">Project Management</div>
-            <button class="btn-green" onclick="saveProject()">SAVE PROJECT</button>
-            <button class="btn-green" onclick="loadProject()">LOAD PROJECT</button>
+            <div class="tool-title">File Management</div>
+            <button class="btn-green" onclick="saveToFile()">SAVE TO DISK (.json)</button>
+            <button class="btn-green" onclick="document.getElementById('fileInput').click()">LOAD FROM DISK</button>
+            <button class="btn-blue" onclick="exportToPNG()">EXPORT AS PNG</button>
+            <input type="file" id="fileInput" style="display:none" onchange="loadFromFile(event)">
+            
+            <div class="tool-title">Canvas Tools</div>
             <button class="btn-red" onclick="deleteSelected()">DELETE SELECTED</button>
             <button class="btn-blue" onclick="groupSelected()">GROUP SELECTED</button>
             <button class="btn-orange" onclick="addEllipsis()">+ ELLIPTICAL WORD</button>
             
             <div class="tool-title">Baseline Elements</div>
-            <div class="palette-item" title="Subject/Predicate" onclick="addShape('subj-pred')"><svg viewBox="0 0 100 60"><line x1="10" y1="30" x2="90" y2="30"/><line x1="50" y1="10" x2="50" y2="50"/></svg></div>
-            <div class="palette-item" title="Direct Object Marker" onclick="addShape('do-marker')"><svg viewBox="0 0 100 60"><polyline points="30,15 30,45 80,45"/></svg></div>
-            <div class="palette-item" title="Slanted Modifier" onclick="addShape('slanted-mod')"><svg viewBox="0 0 100 60"><polyline points="40,15 25,45 75,45"/></svg></div>
+            <div class="palette-item" draggable="true" ondragstart="handleShapeDrag(event, 'subj-pred')" onclick="addShape('subj-pred')"><svg viewBox="0 0 100 60"><line x1="10" y1="30" x2="90" y2="30"/><line x1="50" y1="10" x2="50" y2="50"/></svg></div>
+            <div class="palette-item" draggable="true" ondragstart="handleShapeDrag(event, 'do-marker')" onclick="addShape('do-marker')"><svg viewBox="0 0 100 60"><polyline points="30,15 30,45 80,45"/></svg></div>
+            <div class="palette-item" draggable="true" ondragstart="handleShapeDrag(event, 'slanted-mod')" onclick="addShape('slanted-mod')"><svg viewBox="0 0 100 60"><polyline points="40,15 25,45 75,45"/></svg></div>
             
             <div class="tool-title">Modifiers & Curves</div>
-            <div class="palette-item" title="Solid Line" onclick="addShape('solid-line')"><svg viewBox="0 0 100 60"><line x1="10" y1="30" x2="90" y2="30"/></svg></div>
-            <div class="palette-item" title="Modifier Hook" onclick="addShape('mod-hook')"><svg viewBox="0 0 100 60"><polyline points="20,10 50,50 90,50"/></svg></div>
-            <div class="palette-item" title="Left Bracket" onclick="addShape('bracket-l')"><svg viewBox="0 0 100 60"><polyline points="40,10 20,10 20,50 40,50"/></svg></div>
-            <div class="palette-item" title="Dual-Handle S-Curve" onclick="addSCurve()"><svg viewBox="0 0 100 60"><path d="M10,45 C30,5 70,55 90,15" style="stroke-dasharray: 4,4;"/></svg></div>
+            <div class="palette-item" draggable="true" ondragstart="handleShapeDrag(event, 'solid-line')" onclick="addShape('solid-line')"><svg viewBox="0 0 100 60"><line x1="10" y1="30" x2="90" y2="30"/></svg></div>
+            <div class="palette-item" draggable="true" ondragstart="handleShapeDrag(event, 'mod-hook')" onclick="addShape('mod-hook')"><svg viewBox="0 0 100 60"><polyline points="20,10 50,50 90,50"/></svg></div>
+            <div class="palette-item" draggable="true" ondragstart="handleShapeDrag(event, 'bracket-l')" onclick="addShape('bracket-l')"><svg viewBox="0 0 100 60"><polyline points="40,10 20,10 20,50 40,50"/></svg></div>
+            <div class="palette-item" draggable="true" ondragstart="handleShapeDrag(event, 'scurve')" onclick="addShape('scurve')"><svg viewBox="0 0 100 60"><path d="M10,45 C30,5 70,55 90,15" style="stroke-dasharray: 4,4;"/></svg></div>
             
             <div class="tool-title">Clauses</div>
-            <div class="palette-item" title="Compound Shelf" onclick="addShape('compound-shelf')"><svg viewBox="0 0 100 60"><path d="M10,30 L30,10 L90,10 M30,10 L30,50 M10,30 L30,50 L90,50"/></svg></div>
+            <div class="palette-item" draggable="true" ondragstart="handleShapeDrag(event, 'compound-shelf')" onclick="addShape('compound-shelf')"><svg viewBox="0 0 100 60"><path d="M10,30 L30,10 L90,10 M30,10 L30,50 M10,30 L30,50 L90,50"/></svg></div>
         </div>
         <div id="workspace">
             <canvas id="main-canvas"></canvas>
@@ -81,7 +85,7 @@
         cornerColor: '#3498db', 
         transparentCorners: false, 
         cornerStyle: 'circle',
-        lockSkewingX: true, // Prevent angle distortion
+        lockSkewingX: true,
         lockSkewingY: true
     });
 
@@ -100,88 +104,109 @@
 
     function undo() {
         if (history.length <= 1) {
-            canvas.clear();
-            canvas.backgroundColor = '#f4ecd8';
-            canvas.renderAll();
-            return;
+            canvas.clear(); canvas.backgroundColor = '#f4ecd8'; canvas.renderAll(); return;
         }
-        isHistoryAction = true;
-        history.pop();
+        isHistoryAction = true; history.pop();
         const lastState = history[history.length - 1];
-        canvas.loadFromJSON(lastState, () => {
-            canvas.renderAll();
-            isHistoryAction = false;
-        });
+        canvas.loadFromJSON(lastState, () => { canvas.renderAll(); isHistoryAction = false; });
     }
 
-    // Keyboard Listeners for Undo, Delete, and Precision Arrow Movement
     window.addEventListener('keydown', (e) => {
-        if (document.activeElement.tagName === 'INPUT') return;
-        
         const activeObj = canvas.getActiveObject();
-        const moveStep = e.shiftKey ? 10 : 1;
+        if (activeObj && activeObj.isEditing) return;
+        if (document.activeElement.tagName === 'INPUT') return;
 
+        const moveStep = e.shiftKey ? 10 : 1;
         switch (e.key) {
-            case 'ArrowLeft':
-                if (activeObj) { activeObj.set('left', activeObj.left - moveStep); canvas.requestRenderAll(); e.preventDefault(); }
-                break;
-            case 'ArrowRight':
-                if (activeObj) { activeObj.set('left', activeObj.left + moveStep); canvas.requestRenderAll(); e.preventDefault(); }
-                break;
-            case 'ArrowUp':
-                if (activeObj) { activeObj.set('top', activeObj.top - moveStep); canvas.requestRenderAll(); e.preventDefault(); }
-                break;
-            case 'ArrowDown':
-                if (activeObj) { activeObj.set('top', activeObj.top + moveStep); canvas.requestRenderAll(); e.preventDefault(); }
-                break;
-            case 'z':
-                if (e.ctrlKey || e.metaKey) { e.preventDefault(); undo(); }
-                break;
-            case 'Delete':
-            case 'Backspace':
-                e.preventDefault();
-                deleteSelected();
-                break;
+            case 'ArrowLeft': if (activeObj) { activeObj.set('left', activeObj.left - moveStep); canvas.requestRenderAll(); e.preventDefault(); } break;
+            case 'ArrowRight': if (activeObj) { activeObj.set('left', activeObj.left + moveStep); canvas.requestRenderAll(); e.preventDefault(); } break;
+            case 'ArrowUp': if (activeObj) { activeObj.set('top', activeObj.top - moveStep); canvas.requestRenderAll(); e.preventDefault(); } break;
+            case 'ArrowDown': if (activeObj) { activeObj.set('top', activeObj.top + moveStep); canvas.requestRenderAll(); e.preventDefault(); } break;
+            case 'z': if (e.ctrlKey || e.metaKey) { e.preventDefault(); undo(); } break;
+            case 'Delete': case 'Backspace': e.preventDefault(); deleteSelected(); break;
         }
     });
 
-    canvas.on('object:moving', (e) => {
-        const obj = e.target;
-        if (obj.left + (obj.width * obj.scaleX) > canvas.width - 100) canvas.setWidth(canvas.width + 500);
-        if (obj.top + (obj.height * obj.scaleY) > canvas.height - 100) canvas.setHeight(canvas.height + 500);
-    });
+    function getViewCenter() {
+        const ws = document.getElementById('workspace');
+        return { x: ws.scrollLeft + (ws.clientWidth / 2), y: ws.scrollTop + (ws.clientHeight / 2) };
+    }
+
+    // High-Res Export
+    function exportToPNG() {
+        canvas.discardActiveObject();
+        canvas.renderAll();
+        
+        // Find the bounding box of all objects to export only the content area
+        const activeSelection = new fabric.ActiveSelection(canvas.getObjects(), { canvas: canvas });
+        if (canvas.getObjects().length === 0) {
+            alert("Canvas is empty!");
+            return;
+        }
+        
+        const dataURL = canvas.toDataURL({
+            format: 'png',
+            quality: 1.0,
+            multiplier: 2, // Double resolution for clarity
+            left: activeSelection.left - 50,
+            top: activeSelection.top - 50,
+            width: activeSelection.width + 100,
+            height: activeSelection.height + 100
+        });
+
+        const link = document.createElement('a');
+        link.download = 'syntaxis_diagram.png';
+        link.href = dataURL;
+        link.click();
+        
+        canvas.discardActiveObject();
+        canvas.renderAll();
+    }
+
+    function saveToFile() {
+        const name = prompt("Enter filename for your project:", "diagram_project");
+        if (!name) return;
+        const json = JSON.stringify(canvas.toJSON(['bankIds']));
+        const blob = new Blob([json], {type: "application/json"});
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${name}.json`;
+        link.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function loadFromFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const json = e.target.result;
+            canvas.loadFromJSON(json, () => {
+                history = [json];
+                canvas.renderAll();
+                canvas.getObjects().forEach(obj => {
+                    if (obj.bankIds) {
+                        obj.bankIds.forEach(id => document.getElementById(id)?.classList.add('used'));
+                    }
+                });
+            });
+        };
+        reader.readAsText(file);
+    }
 
     function addEllipsis() {
         const word = prompt("Enter elliptical word:");
         if (word) {
-            const txt = new fabric.IText(`(${word})`, {
-                left: 400, top: 400, fontSize: 19, fill: '#1a535c', fontStyle: 'italic'
-            });
+            const center = getViewCenter();
+            const txt = new fabric.IText(`(${word})`, { left: center.x, top: center.y, fontSize: 19, fill: '#1a535c', fontStyle: 'italic' });
             canvas.add(txt).setActiveObject(txt).renderAll();
-        }
-    }
-
-    function saveProject() {
-        localStorage.setItem('syntaxisProject', JSON.stringify(canvas.toJSON(['bankIds'])));
-        alert('Project saved!');
-    }
-
-    function loadProject() {
-        const json = localStorage.getItem('syntaxisProject');
-        if (json) {
-            canvas.loadFromJSON(json, () => {
-                history = [json];
-                canvas.renderAll();
-                alert('Project loaded!');
-            });
         }
     }
 
     function groupSelected() {
         if (!canvas.getActiveObject() || canvas.getActiveObject().type !== 'activeSelection') return;
-        canvas.getActiveObject().toGroup();
-        canvas.requestRenderAll();
-        saveState();
+        canvas.getActiveObject().toGroup(); canvas.requestRenderAll(); saveState();
     }
 
     function deleteSelected() {
@@ -192,37 +217,29 @@
         canvas.discardActiveObject().renderAll();
     }
 
-    function addShape(type) {
+    function createShapeObject(type, x, y) {
         const s = { stroke: '#1a535c', strokeWidth: 2, fill: 'transparent', strokeUniform: true };
         let obj;
-        if (type === 'subj-pred') {
-            obj = new fabric.Group([
-                new fabric.Line([-40, 0, 40, 0], s), 
-                new fabric.Line([0, -20, 0, 20], s)
-            ], { strokeUniform: true });
-        }
+        if (type === 'subj-pred') obj = new fabric.Group([new fabric.Line([-40,0,40,0], s), new fabric.Line([0,-20,0,20], s)], { strokeUniform: true });
         else if (type === 'do-marker') obj = new fabric.Polyline([{x:0,y:0}, {x:0,y:30}, {x:50,y:30}], s);
-        // lockUniScaling ensures the slanted angle stays consistent when resizing
         else if (type === 'slanted-mod') obj = new fabric.Polyline([{x:15,y:0}, {x:0,y:30}, {x:50,y:30}], { ...s, lockUniScaling: true });
         else if (type === 'solid-line') obj = new fabric.Line([0,0,100,0], s);
         else if (type === 'mod-hook') obj = new fabric.Polyline([{x:0,y:0}, {x:30,y:40}, {x:90,y:40}], { ...s, lockUniScaling: true });
         else if (type === 'bracket-l') obj = new fabric.Polyline([{x:25,y:0}, {x:0,y:0}, {x:0,y:100}, {x:25,y:100}], s);
         else if (type === 'compound-shelf') obj = new fabric.Path('M 0 30 L 30 0 L 100 0 M 30 0 L 30 60 M 0 30 L 30 60 L 100 60', s);
-
-        if (obj) { 
-            obj.set({ left: 400, top: 400 }); 
-            canvas.add(obj).setActiveObject(obj).renderAll(); 
-        }
+        else if (type === 'scurve') obj = new fabric.Path('M 0 50 C 50 0, 150 100, 200 50', { stroke: '#1a535c', strokeWidth: 2, fill: false, strokeDashArray: [5, 5], strokeUniform: true });
+        
+        if (obj) { obj.set({ left: x, top: y }); }
+        return obj;
     }
 
-    function addSCurve() {
-        const path = new fabric.Path('M 0 50 C 50 0, 150 100, 200 50', {
-            left: 400, top: 400, stroke: '#1a535c', strokeWidth: 2,
-            fill: false, strokeDashArray: [5, 5], objectCaching: false,
-            strokeUniform: true
-        });
-        canvas.add(path).setActiveObject(path).renderAll();
+    function addShape(type) {
+        const center = getViewCenter();
+        const obj = createShapeObject(type, center.x, center.y);
+        if (obj) canvas.add(obj).setActiveObject(obj).renderAll();
     }
+
+    function handleShapeDrag(e, type) { e.dataTransfer.setData("shapeType", type); }
 
     function generateWordBank() {
         const bank = document.getElementById('word-bank'); bank.innerHTML = '';
@@ -247,11 +264,23 @@
     const ws = document.getElementById('workspace');
     ws.addEventListener('dragover', e => e.preventDefault());
     ws.addEventListener('drop', e => {
-        const d = JSON.parse(e.dataTransfer.getData("text"));
         const ptr = canvas.getPointer(e);
-        const txt = new fabric.IText(d.t, { left: ptr.x, top: ptr.y, fontSize: 19, fill: '#1a535c', bankIds: d.ids });
-        canvas.add(txt).renderAll();
-        d.ids.forEach(id => document.getElementById(id)?.classList.add('used'));
+        const wordData = e.dataTransfer.getData("text");
+        if (wordData) {
+            const d = JSON.parse(wordData);
+            const txt = new fabric.IText(d.t, { left: ptr.x, top: ptr.y, fontSize: 19, fill: '#1a535c', bankIds: d.ids });
+            canvas.add(txt).renderAll();
+            d.ids.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) { el.classList.remove('selected'); el.classList.add('used'); }
+            });
+            return;
+        }
+        const shapeType = e.dataTransfer.getData("shapeType");
+        if (shapeType) {
+            const obj = createShapeObject(shapeType, ptr.x, ptr.y);
+            if (obj) canvas.add(obj).setActiveObject(obj).renderAll();
+        }
     });
 
     window.onload = () => { generateWordBank(); saveState(); };
