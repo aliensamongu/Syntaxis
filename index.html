@@ -72,6 +72,25 @@
         .btn-orange { background: #e67e22; color: white; width: 100%; margin-bottom: 10px; font-size: 14px; padding: 12px; flex-shrink: 0; }
         .btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.4); color: white; }
         .btn-outline:hover { background: rgba(255,255,255,0.1); }
+        /* Lexicon Sidebar Styling */
+#lexicon-sidebar {
+    position: fixed;
+    right: -320px; /* Hidden by default */
+    top: 0;
+    width: 300px;
+    height: 100%;
+    background: white;
+    box-shadow: -5px 0 15px rgba(0,0,0,0.2);
+    z-index: 1000;
+    transition: 0.3s;
+    padding: 20px;
+    overflow-y: auto;
+    border-left: 4px solid var(--gold);
+}
+#lexicon-sidebar.active { right: 0; }
+.close-sidebar { cursor: pointer; float: right; font-weight: bold; color: var(--teal); }
+.morph-box { background: #f0f4f5; padding: 10px; border-radius: 4px; margin-top: 10px; font-size: 14px; }
+.lex-entry { margin-top: 15px; line-height: 1.6; font-size: 15px; }
     </style>
 </head>
 <body>
