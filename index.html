@@ -2,26 +2,29 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Syntaxis v2.9 | Elliptical Words & Full Kit</title>
+    <title>Syntaxis v3.4 | 14pt Default Text</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
     <style>
         :root { --teal: #1a535c; --accent: #3498db; --gold: #d4c8aa; }
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'SBL Greek', serif; background: #bdc3c7; }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: sans-serif; background: #bdc3c7; }
         #app-root { display: flex; height: 100vh; flex-direction: column; }
         #top-panel { background: var(--teal); color: white; padding: 12px 25px; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
         #word-bank { display: flex; flex-wrap: wrap; gap: 10px; background: rgba(0,0,0,0.15); padding: 12px; border-radius: 8px; max-height: 80px; overflow-y: auto; margin-top: 10px; }
+        
+        /* Set Word Bank text to 14pt (approx 19px) */
         .word-item { cursor: pointer; font-size: 19px; color: white; padding: 3px 6px; border-radius: 4px; }
+        
         .word-item.selected { background: var(--accent); }
         .word-item.used { text-decoration: line-through; opacity: 0.3; }
         #main-layout { display: flex; flex-grow: 1; overflow: hidden; }
-        #toolbar { width: 260px; background: #fdfdfd; border-right: 1px solid #95a5a6; padding: 20px; overflow-y: auto; }
-        #workspace { flex-grow: 1; padding: 30px; display: flex; justify-content: center; background: #95a5a6; }
+        #toolbar { width: 260px; background: #fdfdfd; border-right: 1px solid #95a5a6; padding: 20px; overflow-y: auto; z-index: 10; }
+        #workspace { flex-grow: 1; overflow: auto; background: #95a5a6; position: relative; }
         canvas { box-shadow: 0 20px 50px rgba(0,0,0,0.4); border: 1px solid var(--gold); }
         .tool-title { font-size: 10px; color: #7f8c8d; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 15px; font-weight: bold; border-bottom: 1px solid #eee; }
-        .palette-item { border: 1px solid #ddd; padding: 8px; margin-top: 5px; cursor: pointer; background: #fff; display: flex; justify-content: center; border-radius: 8px; transition: 0.2s; }
+        .palette-item { border: 1px solid #ddd; padding: 8px; margin-top: 5px; cursor: pointer; background: #fff; display: flex; justify-content: center; border-radius: 8px; }
         .palette-item svg { width: 60px; height: 40px; overflow: visible; }
-        .palette-item path, .palette-item line, .palette-item polyline { stroke: var(--teal); fill: none; stroke-width: 2.5; stroke-linecap: round; }
-        button { padding: 8px 14px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; margin-bottom: 8px; width: 100%; }
+        .palette-item path, .palette-item line, .palette-item polyline { stroke: var(--teal); fill: none; stroke-width: 2; stroke-linecap: round; }
+        button { padding: 8px 14px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; margin-bottom: 8px; width: 100%; transition: 0.2s; }
         .btn-blue { background: var(--accent); color: white; }
         .btn-red { background: #e74c3c; color: white; }
         .btn-green { background: #27ae60; color: white; }
@@ -63,36 +66,85 @@
             <div class="tool-title">Clauses</div>
             <div class="palette-item" title="Compound Shelf" onclick="addShape('compound-shelf')"><svg viewBox="0 0 100 60"><path d="M10,30 L30,10 L90,10 M30,10 L30,50 M10,30 L30,50 L90,50"/></svg></div>
         </div>
-        <div id="workspace"><canvas id="main-canvas"></canvas></div>
+        <div id="workspace">
+            <canvas id="main-canvas"></canvas>
+        </div>
     </div>
 </div>
 
 <script>
     const canvas = new fabric.Canvas('main-canvas', { 
-        width: 1000, 
-        height: 700, 
-        backgroundColor: '#f4ecd8',
-        preserveObjectStacking: true,
-        selection: true 
+        width: 2500, height: 2500, backgroundColor: '#f4ecd8',
+        preserveObjectStacking: true, selection: true 
     });
-    
+
     fabric.Object.prototype.set({ 
-        strokeUniform: true, cornerSize: 12, cornerColor: '#3498db', transparentCorners: false, cornerStyle: 'circle' 
+        strokeUniform: true, 
+        cornerSize: 12, 
+        cornerColor: '#3498db', 
+        transparentCorners: false, 
+        cornerStyle: 'circle' 
+    });
+
+    let history = [];
+    let isHistoryAction = false;
+
+    function saveState() {
+        if (isHistoryAction) return;
+        history.push(JSON.stringify(canvas.toJSON(['bankIds'])));
+        if (history.length > 50) history.shift();
+    }
+
+    canvas.on('object:added', saveState);
+    canvas.on('object:modified', saveState);
+    canvas.on('object:removed', saveState);
+
+    function undo() {
+        if (history.length <= 1) {
+            canvas.clear();
+            canvas.backgroundColor = '#f4ecd8';
+            canvas.renderAll();
+            return;
+        }
+        isHistoryAction = true;
+        history.pop();
+        const lastState = history[history.length - 1];
+        canvas.loadFromJSON(lastState, () => {
+            canvas.renderAll();
+            isHistoryAction = false;
+        });
+    }
+
+    window.addEventListener('keydown', (e) => {
+        if (document.activeElement.tagName === 'INPUT') return;
+        if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+            e.preventDefault();
+            undo();
+        }
+        if (e.key === 'Delete' || e.key === 'Backspace') {
+            e.preventDefault();
+            deleteSelected();
+        }
+    });
+
+    canvas.on('object:moving', (e) => {
+        const obj = e.target;
+        if (obj.left + (obj.width * obj.scaleX) > canvas.width - 100) canvas.setWidth(canvas.width + 500);
+        if (obj.top + (obj.height * obj.scaleY) > canvas.height - 100) canvas.setHeight(canvas.height + 500);
     });
 
     function addEllipsis() {
         const word = prompt("Enter elliptical word:");
         if (word) {
             const txt = new fabric.IText(`(${word})`, {
-                left: 200, top: 200, fontFamily: 'SBL Greek', fontSize: 24, fill: '#1a535c', fontStyle: 'italic'
+                left: 400, top: 400, fontSize: 19, fill: '#1a535c', fontStyle: 'italic'
             });
             canvas.add(txt).setActiveObject(txt).renderAll();
         }
     }
 
     function saveProject() {
-        const json = JSON.stringify(canvas.toJSON(['bankIds']));
-        localStorage.setItem('syntaxisProject', json);
+        localStorage.setItem('syntaxisProject', JSON.stringify(canvas.toJSON(['bankIds'])));
         alert('Project saved!');
     }
 
@@ -100,7 +152,8 @@
         const json = localStorage.getItem('syntaxisProject');
         if (json) {
             canvas.loadFromJSON(json, () => {
-                canvas.requestRenderAll();
+                history = [json];
+                canvas.renderAll();
                 alert('Project loaded!');
             });
         }
@@ -110,6 +163,7 @@
         if (!canvas.getActiveObject() || canvas.getActiveObject().type !== 'activeSelection') return;
         canvas.getActiveObject().toGroup();
         canvas.requestRenderAll();
+        saveState();
     }
 
     function deleteSelected() {
@@ -120,17 +174,15 @@
         canvas.discardActiveObject().renderAll();
     }
 
-    window.addEventListener('keydown', (e) => {
-        if ((e.key === 'Delete' || e.key === 'Backspace') && document.activeElement.tagName !== 'INPUT') {
-            e.preventDefault();
-            deleteSelected();
-        }
-    });
-
     function addShape(type) {
-        const s = { stroke: '#1a535c', strokeWidth: 2, fill: 'transparent' };
+        const s = { stroke: '#1a535c', strokeWidth: 2, fill: 'transparent', strokeUniform: true };
         let obj;
-        if (type === 'subj-pred') obj = new fabric.Group([new fabric.Line([-40,0,40,0], s), new fabric.Line([0,-20,0,20], s)]);
+        if (type === 'subj-pred') {
+            obj = new fabric.Group([
+                new fabric.Line([-40, 0, 40, 0], s), 
+                new fabric.Line([0, -20, 0, 20], s)
+            ], { strokeUniform: true });
+        }
         else if (type === 'do-marker') obj = new fabric.Polyline([{x:0,y:0}, {x:0,y:30}, {x:50,y:30}], s);
         else if (type === 'slanted-mod') obj = new fabric.Polyline([{x:15,y:0}, {x:0,y:30}, {x:50,y:30}], s);
         else if (type === 'solid-line') obj = new fabric.Line([0,0,100,0], s);
@@ -138,13 +190,17 @@
         else if (type === 'bracket-l') obj = new fabric.Polyline([{x:25,y:0}, {x:0,y:0}, {x:0,y:100}, {x:25,y:100}], s);
         else if (type === 'compound-shelf') obj = new fabric.Path('M 0 30 L 30 0 L 100 0 M 30 0 L 30 60 M 0 30 L 30 60 L 100 60', s);
 
-        if (obj) { obj.set({ left: 150, top: 150 }); canvas.add(obj).setActiveObject(obj).renderAll(); }
+        if (obj) { 
+            obj.set({ left: 400, top: 400 }); 
+            canvas.add(obj).setActiveObject(obj).renderAll(); 
+        }
     }
 
     function addSCurve() {
         const path = new fabric.Path('M 0 50 C 50 0, 150 100, 200 50', {
-            left: 200, top: 200, stroke: '#1a535c', strokeWidth: 2,
-            fill: false, strokeDashArray: [5, 5], objectCaching: false
+            left: 400, top: 400, stroke: '#1a535c', strokeWidth: 2,
+            fill: false, strokeDashArray: [5, 5], objectCaching: false,
+            strokeUniform: true
         });
         canvas.add(path).setActiveObject(path).renderAll();
     }
@@ -174,12 +230,13 @@
     ws.addEventListener('drop', e => {
         const d = JSON.parse(e.dataTransfer.getData("text"));
         const ptr = canvas.getPointer(e);
-        const txt = new fabric.IText(d.t, { left: ptr.x, top: ptr.y, fontFamily: 'SBL Greek', fontSize: 24, fill: '#1a535c', bankIds: d.ids });
+        // Canvas Text set to 14pt (19px)
+        const txt = new fabric.IText(d.t, { left: ptr.x, top: ptr.y, fontSize: 19, fill: '#1a535c', bankIds: d.ids });
         canvas.add(txt).renderAll();
         d.ids.forEach(id => document.getElementById(id)?.classList.add('used'));
     });
 
-    window.onload = generateWordBank;
+    window.onload = () => { generateWordBank(); saveState(); };
 </script>
 </body>
 </html>
