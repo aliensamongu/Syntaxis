@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Syntaxis v2.6 | Solid Line Addition</title>
+    <title>Syntaxis v2.7 | Multi-Select & Final Baseline Kit</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
     <style>
         :root { --teal: #1a535c; --accent: #3498db; --gold: #d4c8aa; }
@@ -41,11 +41,12 @@
     <div id="main-layout">
         <div id="toolbar">
             <button class="btn-red" onclick="deleteSelected()">DELETE SELECTED</button>
+            <button class="btn-blue" onclick="groupSelected()">GROUP SELECTED</button>
             
             <div class="tool-title">Baseline Elements</div>
             <div class="palette-item" title="Subject/Predicate" onclick="addShape('subj-pred')"><svg viewBox="0 0 100 60"><line x1="10" y1="30" x2="90" y2="30"/><line x1="50" y1="10" x2="50" y2="50"/></svg></div>
             <div class="palette-item" title="Direct Object Marker" onclick="addShape('do-marker')"><svg viewBox="0 0 100 60"><polyline points="30,15 30,45 80,45"/></svg></div>
-            <div class="palette-item" title="Predicate Nom/Adj" onclick="addShape('pred-adj')"><svg viewBox="0 0 100 60"><line x1="10" y1="45" x2="80" y2="45"/><line x1="45" y1="15" x2="35" y2="45" transform="rotate(-30, 40, 45)"/></svg></div>
+            <div class="palette-item" title="Slanted Modifier" onclick="addShape('slanted-mod')"><svg viewBox="0 0 100 60"><polyline points="40,15 25,45 75,45"/></svg></div>
             
             <div class="tool-title">Modifiers & Curves</div>
             <div class="palette-item" title="Solid Line" onclick="addShape('solid-line')"><svg viewBox="0 0 100 60"><line x1="10" y1="30" x2="90" y2="30"/></svg></div>
@@ -61,11 +62,24 @@
 </div>
 
 <script>
-    const canvas = new fabric.Canvas('main-canvas', { width: 1000, height: 700, backgroundColor: '#f4ecd8' });
+    const canvas = new fabric.Canvas('main-canvas', { 
+        width: 1000, 
+        height: 700, 
+        backgroundColor: '#f4ecd8',
+        preserveObjectStacking: true,
+        selection: true // RESTORED MULTI-SELECT DRAG
+    });
     
     fabric.Object.prototype.set({ 
         strokeUniform: true, cornerSize: 12, cornerColor: '#3498db', transparentCorners: false, cornerStyle: 'circle' 
     });
+
+    function groupSelected() {
+        if (!canvas.getActiveObject()) return;
+        if (canvas.getActiveObject().type !== 'activeSelection') return;
+        canvas.getActiveObject().toGroup();
+        canvas.requestRenderAll();
+    }
 
     function deleteSelected() {
         canvas.getActiveObjects().forEach(obj => {
@@ -76,20 +90,18 @@
     }
 
     window.addEventListener('keydown', (e) => {
-        if (e.key === 'Delete' || e.key === 'Backspace') {
-            if (document.activeElement.tagName !== 'INPUT') {
-                e.preventDefault();
-                deleteSelected();
-            }
+        if ((e.key === 'Delete' || e.key === 'Backspace') && document.activeElement.tagName !== 'INPUT') {
+            e.preventDefault();
+            deleteSelected();
         }
     });
 
     function addShape(type) {
         const s = { stroke: '#1a535c', strokeWidth: 2, fill: 'transparent' };
         let obj;
-        if (type === 'subj-pred') obj = new fabric.Group([new fabric.Line([-50,0,50,0], s), new fabric.Line([0,-25,0,25], s)]);
-        else if (type === 'do-marker') obj = new fabric.Polyline([{x:0,y:0}, {x:0,y:40}, {x:80,y:40}], s);
-        else if (type === 'pred-adj') obj = new fabric.Group([new fabric.Line([0,40,100,40], s), new fabric.Line([40,0,20,40], s)]);
+        if (type === 'subj-pred') obj = new fabric.Group([new fabric.Line([-40,0,40,0], s), new fabric.Line([0,-20,0,20], s)]);
+        else if (type === 'do-marker') obj = new fabric.Polyline([{x:0,y:0}, {x:0,y:30}, {x:50,y:30}], s);
+        else if (type === 'slanted-mod') obj = new fabric.Polyline([{x:15,y:0}, {x:0,y:30}, {x:50,y:30}], s);
         else if (type === 'solid-line') obj = new fabric.Line([0,0,100,0], s);
         else if (type === 'mod-hook') obj = new fabric.Polyline([{x:0,y:0}, {x:30,y:40}, {x:90,y:40}], s);
         else if (type === 'bracket-l') obj = new fabric.Polyline([{x:25,y:0}, {x:0,y:0}, {x:0,y:100}, {x:25,y:100}], s);
