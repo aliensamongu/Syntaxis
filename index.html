@@ -94,7 +94,12 @@
     </style>
 </head>
 <body>
-
+<div id="lexicon-sidebar">
+    <span class="close-sidebar" onclick="document.getElementById('lexicon-sidebar').classList.remove('active')">✕ Close</span>
+    <h2 id="lex-word" style="color: var(--teal); margin-top: 30px;"></h2>
+    <div id="lex-morph" class="morph-box">Click a word + Option to parse...</div>
+    <div id="lex-content" class="lex-entry"></div>
+</div>
 <div id="app-root">
     <div id="top-panel">
         <div class="brand-row">
@@ -202,6 +207,53 @@
     window.addEventListener('keydown', (e) => { if (e.key === "Backspace" || e.key === "Delete") { canvas.getActiveObjects().forEach(obj => { if (obj.bankIds) obj.bankIds.forEach(id => document.getElementById(id).classList.remove('used')); if (obj.h1) { canvas.remove(obj.h1); canvas.remove(obj.h2); } canvas.remove(obj); }); canvas.discardActiveObject().renderAll(); } });
     function exportDiagram() { const link = document.createElement('a'); link.download = 'Syntaxis_Diagram.png'; link.href = canvas.toDataURL({ multiplier: 2 }); link.click(); }
     window.onload = generateWordBank;
+    // Lexicon and Morphology Integration
+async function getGreekData(word) {
+    const sidebar = document.getElementById('lexicon-sidebar');
+    const wordEl = document.getElementById('lex-word');
+    const morphEl = document.getElementById('lex-morph');
+    const contentEl = document.getElementById('lex-content');
+
+    sidebar.classList.add('active');
+    wordEl.innerText = word;
+    morphEl.innerText = "Parsing morphology...";
+    contentEl.innerText = "Fetching Thayer's Lexicon entry...";
+
+    try {
+        // 1. Fetch Morphology (Perseids)
+        const morphRes = await fetch(`https://morph.perseids.org/analysis/word?lang=grc&engine=morpheusgrc&word=${word}`);
+        const morphData = await morphRes.json();
+        
+        if (morphData.RDF.Annotation.hasBody) {
+            const body = morphData.RDF.Annotation.hasBody;
+            const parse = Array.isArray(body) ? body[0] : body;
+            morphEl.innerHTML = `<strong>Lemma:</strong> ${parse.restores.value}<br>
+                                 <strong>Parse:</strong> ${parse.description.value}`;
+        }
+
+        // 2. Link to Logeion (Provides Thayer's/LSJ)
+        contentEl.innerHTML = `<p>Definitions for <strong>${word}</strong> can be found in the scholarly lexicons.</p>
+                               <a href="https://logeion.uchicago.edu/${word}" target="_blank" class="btn-blue" style="display:block; text-align:center; text-decoration:none;">Open Full Thayer's Entry</a>`;
+        
+    } catch (err) {
+        morphEl.innerText = "Error fetching data.";
+        contentEl.innerText = "Check your internet connection or try a different word.";
+    }
+}
+
+// Option + Click Listener for Canvas
+canvas.on('mouse:down', function(opt) {
+    if (opt.e.altKey && opt.target && opt.target.type === 'i-text') {
+        getGreekData(opt.target.text);
+    }
+});
+
+// Option + Click Listener for Word Bank
+document.getElementById('word-bank').addEventListener('click', (e) => {
+    if (e.altKey && e.target.classList.contains('word-item')) {
+        getGreekData(e.target.textContent);
+    }
+});
 </script>
 </body>
 </html>
