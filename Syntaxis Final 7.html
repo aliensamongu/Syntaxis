@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Syntaxis | Greek Diagramming Suite</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <style>
+        :root { 
+            --teal: #1a535c; 
+            --accent: #3498db; 
+            --parchment: #f4ecd8; 
+            --gold: #d4c8aa;
+        }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'SBL Greek', 'Segoe UI', serif; background: #bdc3c7; }
+        
+        #app-root { display: flex; height: 100vh; flex-direction: column; }
+
+        /* Brand Header */
+        #top-panel { background: var(--teal); color: white; padding: 12px 25px; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .brand-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+        .brand-name { font-size: 24px; font-weight: 800; letter-spacing: 1px; color: var(--gold); display: flex; align-items: center; gap: 8px; }
+        
+        /* CHI ICON STYLING */
+        .brand-icon { width: 22px; height: 22px; stroke: var(--gold); stroke-width: 3; fill: none; stroke-linecap: round; }
+        
+        .brand-tagline { font-size: 12px; text-transform: uppercase; opacity: 0.8; letter-spacing: 2px; }
+        
+        #input-row { display: flex; gap: 12px; align-items: center; margin-bottom: 10px; }
+        #passageInput { flex-grow: 1; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white; font-size: 16px; }
+        
+        #word-bank { display: flex; flex-wrap: wrap; gap: 10px; background: rgba(0,0,0,0.15); padding: 12px; border-radius: 8px; max-height: 80px; overflow-y: auto; }
+        .word-item { cursor: pointer; font-size: 19px; color: white; padding: 3px 6px; border-radius: 4px; transition: 0.2s; }
+        .word-item.selected { background: var(--accent); }
+        .word-item.used { text-decoration: line-through; opacity: 0.3; }
+
+        #main-layout { display: flex; flex-grow: 1; overflow: hidden; }
+        
+        /* Toolbar Styling */
+        #toolbar { 
+            width: 260px; 
+            background: #fdfdfd; 
+            border-right: 1px solid #95a5a6; 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 6px; 
+            overflow-y: auto; 
+            height: 100%;
+        }
+
+        #toolbar::-webkit-scrollbar { width: 8px; }
+        #toolbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        #toolbar::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+
+        .tool-title { font-size: 10px; color: #7f8c8d; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 12px; margin-bottom: 4px; font-weight: bold; border-bottom: 1px solid #eee; }
+        
+        .palette-item { border: 1px solid #ddd; padding: 6px; cursor: pointer; background: #fff; display: flex; justify-content: center; border-radius: 8px; transition: 0.2s; min-height: 40px; }
+        .palette-item svg { width: 50px; height: 30px; overflow: visible; }
+        .palette-item path, .palette-item line { stroke: var(--teal); fill: none; stroke-width: 2.5; stroke-linecap: round; }
+        
+        #workspace { flex-grow: 1; padding: 30px; display: flex; justify-content: center; align-items: center; background: #95a5a6; }
+        canvas { box-shadow: 0 20px 50px rgba(0,0,0,0.4); border: 1px solid var(--gold); }
+        
+        button { padding: 8px 14px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 13px; }
+        .btn-green { background: #27ae60; color: white; }
+        .btn-blue { background: var(--accent); color: white; }
+        .btn-orange { background: #e67e22; color: white; width: 100%; margin-bottom: 10px; font-size: 14px; padding: 12px; flex-shrink: 0; }
+        .btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.4); color: white; }
+        .btn-outline:hover { background: rgba(255,255,255,0.1); }
+    </style>
+</head>
+<body>
+
+<div id="app-root">
+    <div id="top-panel">
+        <div class="brand-row">
+            <span class="brand-name">
+                SYNTAXIS
+                <svg class="brand-icon" viewBox="0 0 40 40">
+                    <line x1="10" y1="10" x2="30" y2="30" />
+                    <line x1="30" y1="10" x2="10" y2="30" />
+                </svg>
+            </span>
+            <span class="brand-tagline">Exegetical Workspace</span>
+            <div style="margin-left: auto; display: flex; gap: 10px;">
+                <button class="btn-outline" onclick="saveToFile()">Save Project (.json)</button>
+                <button class="btn-outline" onclick="document.getElementById('fileInput').click()">Load Project</button>
+                <input type="file" id="fileInput" style="display:none" accept=".json" onchange="loadFromFile(event)">
+                <button class="btn-green" onclick="exportDiagram()">Export PNG</button>
+            </div>
+        </div>
+        <div id="input-row">
+            <input type="text" id="passageInput" value="Ἐν ἀρχῇ ἦν ὁ λόγος καὶ ὁ λόγος ἦν πρὸς τὸν θεόν">
+            <button class="btn-blue" onclick="generateWordBank()">New Passage</button>
+        </div>
+        <div id="word-bank"></div>
+    </div>
+
+    <div id="main-layout">
+        <div id="toolbar">
+            <button class="btn-orange" onclick="addCustomText()">+ Add Custom Text</button>
+            
+            <div class="tool-title">Baseline</div>
+            <div class="palette-item" title="Baseline Cross" onclick="addShape('cross')"><svg viewBox="0 0 100 60"><line x1="10" y1="30" x2="90" y2="30"/><line x1="50" y1="10" x2="50" y2="50"/></svg></div>
+            <div class="palette-item" title="Modifier Hook" onclick="addShape('mod-hook')"><svg viewBox="0 0 100 60"><path d="M20,10 L45,50 L90,50"/></svg></div>
+            <div class="palette-item" title="Thin Right" onclick="addShape('ang-thin-rt')"><svg viewBox="0 0 100 60"><path d="M25,25 L25,35 L75,35"/></svg></div>
+            <div class="palette-item" title="Thin Acute" onclick="addShape('ang-thin-ac')"><svg viewBox="0 0 100 60"><path d="M70,10 L30,50 L95,50"/></svg></div>
+
+            <div class="tool-title">Lines & Brackets</div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                <div class="palette-item" title="Solid" onclick="addShape('line-solid')"><svg viewBox="0 0 100 60"><line x1="10" y1="30" x2="90" y2="30"/></svg></div>
+                <div class="palette-item" title="Dotted" onclick="addShape('line-dotted')"><svg viewBox="0 0 100 60"><line x1="10" y1="30" x2="90" y2="30" style="stroke-dasharray: 4,4;"/></svg></div>
+                <div class="palette-item" title="Left Bracket" onclick="addShape('bracket-L')"><svg viewBox="0 0 40 60"><path d="M30,5 L10,5 L10,55 L30,55"/></svg></div>
+                <div class="palette-item" title="Right Bracket" onclick="addShape('bracket-R')"><svg viewBox="0 0 40 60"><path d="M10,5 L30,5 L30,55 L10,55"/></svg></div>
+            </div>
+            <div class="palette-item" title="S-Curve Link" onclick="addSLink()"><svg viewBox="0 0 100 60"><path d="M10,45 C30,10 70,10 90,45" style="stroke-dasharray: 4,4;"/></svg></div>
+
+            <div class="tool-title">Base Structures</div>
+            <div class="palette-item" title="Compound fork" onclick="addShape('sv-fork')"><svg viewBox="0 0 100 60"><path d="M50,10 L50,40 M50,40 L10,60 M50,40 L90,60"/></svg></div>
+            <div class="palette-item" title="Obj Divider" onclick="addShape('obj-divider')"><svg viewBox="0 0 100 60"><line x1="10" y1="30" x2="90" y2="30"/><line x1="50" y1="5" x2="50" y2="30"/></svg></div>
+        </div>
+        <div id="workspace"><canvas id="main-canvas"></canvas></div>
+    </div>
+</div>
+
+<script>
+    const canvas = new fabric.Canvas('main-canvas', { width: 1200, height: 800, backgroundColor: '#f4ecd8' });
+    fabric.Object.prototype.set({ strokeUniform: true, cornerSize: 9, cornerColor: '#3498db', transparentCorners: false, cornerStyle: 'circle' });
+
+    function getCanvasCenter() { return { x: canvas.getWidth() / 2, y: canvas.getHeight() / 2 }; }
+
+    function saveToFile() {
+        const projectData = { version: "1.0", passage: document.getElementById('passageInput').value, canvas: canvas.toJSON(['bankIds', 'h1', 'h2', 'name']), usedWords: Array.from(document.querySelectorAll('.word-item.used')).map(el => el.id) };
+        const blob = new Blob([JSON.stringify(projectData)], {type: "application/json"}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Syntaxis_Project_${new Date().toLocaleDateString()}.json`; a.click();
+    }
+    function loadFromFile(event) {
+        const reader = new FileReader(); reader.onload = function(e) {
+            const data = JSON.parse(e.target.result); document.getElementById('passageInput').value = data.passage; generateWordBank();
+            canvas.loadFromJSON(data.canvas, () => {
+                canvas.getObjects().forEach(obj => { if (obj.name === 's-curve') { const h1 = canvas.getObjects().find(o => o.left === obj.h1.left && o.top === obj.h1.top); const h2 = canvas.getObjects().find(o => o.left === obj.h2.left && o.top === obj.h2.top); obj.h1 = h1; obj.h2 = h2; const update = () => { const d = obj.path; d[1][1]=h1.left; d[1][2]=h1.top; d[1][3]=h2.left; d[1][4]=h2.top; obj.path=d; canvas.renderAll(); }; h1.on('moving', update); h2.on('moving', update); } });
+                data.usedWords.forEach(id => document.getElementById(id)?.classList.add('used')); canvas.renderAll();
+            });
+        }; reader.readAsText(event.target.files[0]);
+    }
+
+    function addSLink() {
+        const ctr = getCanvasCenter();
+        const p1={x:ctr.x-150, y:ctr.y}, cp1={x:ctr.x-50, y:ctr.y-100}, cp2={x:ctr.x+50, y:ctr.y-100}, p2={x:ctr.x+150, y:ctr.y};
+        const curve = new fabric.Path(`M ${p1.x} ${p1.y} C ${cp1.x} ${cp1.y}, ${cp2.x} ${cp2.y}, ${p2.x} ${p2.y}`, { stroke: '#1a535c', strokeWidth: 2, fill: false, strokeDashArray: [5, 5], objectCaching: false, name: 's-curve' });
+        const makeH = (x,y) => new fabric.Circle({ left:x, top:y, radius:8, fill:'#3498db', stroke:'#fff', originX:'center', originY:'center', hasControls:false });
+        const h1 = makeH(cp1.x, cp1.y); const h2 = makeH(cp2.x, cp2.y); curve.h1 = h1; curve.h2 = h2; const update = () => { const d = curve.path; d[1][1]=h1.left; d[1][2]=h1.top; d[1][3]=h2.left; d[1][4]=h2.top; curve.path=d; curve.setCoords(); canvas.renderAll(); }; h1.on('moving', update); h2.on('moving', update); canvas.add(curve, h1, h2).setActiveObject(curve);
+    }
+
+    function addShape(type) {
+        const ctr = getCanvasCenter(); const s = { stroke: '#1a535c', strokeWidth: 2, fill: 'transparent' };
+        let obj;
+        if (type === 'bracket-L') obj = new fabric.Polyline([{x:25, y:0}, {x:0, y:0}, {x:0, y:120}, {x:25, y:120}], { ...s, left: ctr.x-50, top: ctr.y-60 });
+        else if (type === 'bracket-R') obj = new fabric.Polyline([{x:0, y:0}, {x:25, y:0}, {x:25, y:120}, {x:0, y:120}], { ...s, left: ctr.x+25, top: ctr.y-60 });
+        else if (type === 'ang-thin-rt') obj = new fabric.Polyline([{x:0, y:0}, {x:0, y:30}, {x:150, y:30}], { ...s, left: ctr.x-75, top: ctr.y-15 });
+        else if (type === 'ang-thin-ac') obj = new fabric.Polyline([{x:100, y:0}, {x:0, y:100}, {x:160, y:100}], { ...s, left: ctr.x-80, top: ctr.y-50 });
+        else if (type === 'line-solid') obj = new fabric.Line([ctr.x-90, ctr.y, ctr.x+90, ctr.y], s);
+        else if (type === 'line-dotted') obj = new fabric.Line([ctr.x-90, ctr.y, ctr.x+90, ctr.y], { ...s, strokeDashArray: [5, 5] });
+        else if (type === 'cross') obj = new fabric.Group([new fabric.Line([-80, 0, 80, 0], s), new fabric.Line([0, -40, 0, 40], s)], { left: ctr.x, top: ctr.y });
+        else if (type === 'obj-divider') obj = new fabric.Group([new fabric.Line([-80, 0, 80, 0], s), new fabric.Line([0, -30, 0, 0], s)], { left: ctr.x, top: ctr.y });
+        else if (type === 'mod-hook') obj = new fabric.Polyline([{x:0, y:0}, {x:30, y:50}, {x:120, y:50}], { ...s, left: ctr.x-60, top: ctr.y-25 });
+        else if (type === 'sv-fork') obj = new fabric.Polyline([{x: 100, y: 0}, {x: 100, y: 100}, {x: 0, y: 160}, {x: 100, y: 100}, {x: 200, y: 160}], { ...s, left: ctr.x-100, top: ctr.y-80 });
+        if (obj) canvas.add(obj).setActiveObject(obj).renderAll();
+    }
+
+    function addCustomText() { const val = prompt("Enter text:"); if (val) addTextToCanvas(val, 200, 200); }
+    function addTextToCanvas(text, x, y, bankIds = []) {
+        const gText = new fabric.IText(text, { left: x, top: y, fontFamily: 'SBL Greek', fontSize: 24, fontWeight: 'bold', fill: '#1a535c' }); gText.bankIds = bankIds; canvas.add(gText).setActiveObject(gText).renderAll();
+    }
+    function generateWordBank() {
+        const input = document.getElementById('passageInput').value; const bank = document.getElementById('word-bank'); bank.innerHTML = ''; input.split(/[\s,.;·]+/).filter(w => w.length > 0).forEach((word, index) => { const item = document.createElement('span'); item.className = 'word-item'; item.textContent = word; item.id = `bw-${index}`; item.draggable = true; item.onclick = () => item.classList.toggle('selected'); item.ondragstart = (e) => { const sel = document.querySelectorAll('.word-item.selected'); const data = (sel.length > 0 && item.classList.contains('selected')) ? { t: Array.from(sel).map(el => el.textContent).join(' '), ids: Array.from(sel).map(el => el.id) } : { t: word, ids: [item.id] }; e.dataTransfer.setData("text", JSON.stringify(data)); }; bank.appendChild(item); });
+    }
+    const ws = document.getElementById('workspace'); ws.addEventListener('dragover', (e) => e.preventDefault()); ws.addEventListener('drop', (e) => { e.preventDefault(); try { const data = JSON.parse(e.dataTransfer.getData("text")); addTextToCanvas(data.t, canvas.getPointer(e).x, canvas.getPointer(e).y, data.ids); data.ids.forEach(id => document.getElementById(id)?.classList.add('used')); } catch(err) {} });
+    window.addEventListener('keydown', (e) => { if (e.key === "Backspace" || e.key === "Delete") { canvas.getActiveObjects().forEach(obj => { if (obj.bankIds) obj.bankIds.forEach(id => document.getElementById(id).classList.remove('used')); if (obj.h1) { canvas.remove(obj.h1); canvas.remove(obj.h2); } canvas.remove(obj); }); canvas.discardActiveObject().renderAll(); } });
+    function exportDiagram() { const link = document.createElement('a'); link.download = 'Syntaxis_Diagram.png'; link.href = canvas.toDataURL({ multiplier: 2 }); link.click(); }
+    window.onload = generateWordBank;
+</script>
+</body>
+</html>
