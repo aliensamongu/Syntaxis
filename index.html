@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Syntaxis v11.2 | The Exegetical Toolkit</title>
+    <title>Syntaxis v11.4 | The Exegetical Toolkit</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
     <style>
         :root { --teal: #1a535c; --accent: #3498db; --gold: #d4c8aa; --light: #fdfdfd; --red: #e74c3c; --maroon: #800000; }
@@ -12,7 +12,6 @@
         #top-panel { background: var(--teal); color: white; padding: 12px 20px; z-index: 1000; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
         .header-main { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 10px; }
         
-        /* Fixed Word Bank height with scrolling */
         #word-bank { 
             display: flex; 
             flex-wrap: wrap; 
@@ -26,8 +25,9 @@
         #word-bank::-webkit-scrollbar { width: 6px; }
         #word-bank::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 10px; }
 
-        .word-item { cursor: pointer; font-size: 18px; color: white; user-select: none; padding: 2px 5px; border-radius: 3px; }
-        .word-item:hover { background: rgba(255,255,255,0.1); }
+        .word-item { cursor: grab; font-size: 18px; color: white; user-select: none; padding: 2px 5px; border-radius: 3px; border: 1px solid transparent; }
+        .word-item:active { cursor: grabbing; }
+        .word-item:hover { border-color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.1); }
         .word-item.used { text-decoration: line-through; opacity: 0.3; pointer-events: none; }
 
         #main-layout { display: flex; flex: 1; width: 100vw; overflow: hidden; }
@@ -48,6 +48,7 @@
         button { padding: 8px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 5px; font-size: 11px; text-transform: uppercase; }
         .btn-maroon { background: var(--maroon); color: white; }
         .btn-green { background: #27ae60; color: white; }
+        .btn-blue { background: var(--accent); color: white; }
         .btn-red { background: var(--red); color: white; }
 
         #note-popup { position: absolute; display: none; background: white; border: 2px solid var(--teal); padding: 10px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 2000; width: 220px; }
@@ -99,6 +100,7 @@
             <div class="tool-title">Color</div>
             <div id="color-grid" class="style-grid"></div>
             <div class="tool-title">Project</div>
+            <button class="btn-blue" onclick="loadProject()">Load Project</button>
             <button class="btn-green" onclick="saveWithPicker()">Save As...</button>
             <button class="btn-red" onclick="deleteSelected()">Delete</button>
         </div>
@@ -106,7 +108,13 @@
 </div>
 
 <script>
-    const canvas = new fabric.Canvas('main-canvas', { width: 5000, height: 5000, backgroundColor: '#f4ecd8' });
+    const canvas = new fabric.Canvas('main-canvas', { 
+        width: 5000, 
+        height: 5000, 
+        backgroundColor: '#f4ecd8',
+        fireRightClick: true,
+        stopContextMenu: true
+    });
     let activeColor = '#000000';
     let currentOpenNoteObj = null;
 
@@ -117,6 +125,48 @@
         cornerSize: 10,
         borderColor: '#3498db'
     });
+
+    // --- REFINED DRAG AND DROP ---
+    const workspace = document.getElementById('workspace');
+
+    // Prevent default to allow drop
+    workspace.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+    });
+
+    workspace.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const dataStr = e.dataTransfer.getData('text/plain');
+        if (!dataStr) return;
+
+        try {
+            const wordData = JSON.parse(dataStr);
+            // Calculate mouse position relative to the canvas
+            const rect = canvas.getElement().getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            addWordToCanvas(wordData.text, wordData.id, x, y);
+        } catch (err) {
+            console.error("Drop error:", err);
+        }
+    });
+
+    function addWordToCanvas(text, id, x, y) {
+        const txt = new fabric.IText(text, { 
+            left: x, 
+            top: y, 
+            fontSize: 20, 
+            fill: activeColor, 
+            bankId: id,
+            originX: 'center',
+            originY: 'center'
+        });
+        canvas.add(txt).setActiveObject(txt).renderAll();
+        const el = document.getElementById(id);
+        if (el) el.classList.add('used');
+    }
 
     // Keyboard Precision & Global Controls
     window.addEventListener('keydown', (e) => {
@@ -148,27 +198,16 @@
         }
     });
 
-    // Dynamic Book Mapping & BLB Integration
     function openBLB(wordText) {
         const ref = document.getElementById('refInput').value.trim();
-        // Regex to capture books (including numbered ones like 1 John) and chapter:verse
         const match = ref.match(/^(\d?\s?[a-zA-Z]+)\s+(\d+)[:\.](\d+)/i);
-        
         if (match) {
             let bookName = match[1].trim();
             let chapter = match[2];
             let verse = match[3];
-
-            // Build abbreviation: First character (digit) + next word's first two chars
             let bookParts = bookName.split(' ');
-            let abbrev = "";
-            if (bookParts.length > 1) {
-                abbrev = bookParts[0] + bookParts[1].substring(0, 2);
-            } else {
-                abbrev = bookName.substring(0, 3);
-            }
-
-            const isGreek = /[\u0370-\u03FF]/.test(wordText);
+            let abbrev = bookParts.length > 1 ? bookParts[0] + bookParts[1].substring(0, 2) : bookName.substring(0, 3);
+            const isGreek = /[Ͱ-Ͽ]/.test(wordText);
             const version = isGreek ? 'mgnt' : 'kjv';
             window.open(`https://www.blueletterbible.org/${version}/${abbrev}/${chapter}/${verse}`, '_blank');
         }
@@ -178,15 +217,8 @@
         if (!opt.target) return;
         const isOption = opt.e.altKey;
         const isCmdCtrl = opt.e.metaKey || opt.e.ctrlKey;
-
-        if (isOption && !isCmdCtrl && opt.target.type === 'i-text') {
-            openBLB(opt.target.text);
-            return;
-        }
-        if (isOption && isCmdCtrl && opt.target.type === 'i-text') {
-            showNotePopup(opt.target, opt.e.clientX, opt.e.clientY);
-            return;
-        }
+        if (isOption && !isCmdCtrl && opt.target.type === 'i-text') { openBLB(opt.target.text); return; }
+        if (isOption && isCmdCtrl && opt.target.type === 'i-text') { showNotePopup(opt.target, opt.e.clientX, opt.e.clientY); return; }
         if (opt.target.isRedDot) showNotePopup(opt.target.parentWord, opt.e.clientX, opt.e.clientY);
     });
 
@@ -279,12 +311,20 @@
         const input = document.getElementById('passageInput').value.trim();
         const words = input.split(/\s+/);
         words.forEach((t, i) => {
-            const s = document.createElement('span'); s.className = 'word-item'; s.textContent = t; s.id = `w-${i}`;
-            s.onclick = () => {
-                const txt = new fabric.IText(t, { left: 200, top: 200, fontSize: 20, fill: activeColor, bankId: s.id });
-                canvas.add(txt).setActiveObject(txt).renderAll();
-                s.classList.add('used');
+            const id = `w-${i}`;
+            const s = document.createElement('span'); 
+            s.className = 'word-item'; s.textContent = t; s.id = id;
+            s.draggable = true;
+            
+            // Legacy click support
+            s.onclick = () => addWordToCanvas(t, id, 200, 200);
+            
+            // Drag start
+            s.ondragstart = (e) => {
+                e.dataTransfer.effectAllowed = 'copy';
+                e.dataTransfer.setData('text/plain', JSON.stringify({text: t, id: id}));
             };
+            
             bank.appendChild(s);
         });
     }
@@ -306,12 +346,39 @@
 
     async function saveWithPicker() {
         try {
-            const json = JSON.stringify(canvas.toJSON(['bankId', 'noteData', 'isRedDot']));
+            const state = {
+                canvas: canvas.toJSON(['bankId', 'noteData', 'isRedDot']),
+                ref: document.getElementById('refInput').value,
+                passage: document.getElementById('passageInput').value,
+                critNotes: document.getElementById('critNotes').value
+            };
             const handle = await window.showSaveFilePicker({ suggestedName: 'diagram.json', types: [{ accept: {'application/json': ['.json']} }] });
             const writable = await handle.createWritable();
-            await writable.write(json);
+            await writable.write(JSON.stringify(state));
             await writable.close();
-        } catch(e) { console.log("Save cancelled"); }
+        } catch(e) {}
+    }
+
+    async function loadProject() {
+        try {
+            const [handle] = await window.showOpenFilePicker({ types: [{ accept: {'application/json': ['.json']} }] });
+            const file = await handle.getFile();
+            const contents = await file.text();
+            const state = JSON.parse(contents);
+            document.getElementById('refInput').value = state.ref || "";
+            document.getElementById('passageInput').value = state.passage || "";
+            document.getElementById('critNotes').value = state.critNotes || "";
+            generateWordBank();
+            canvas.loadFromJSON(state.canvas, () => {
+                canvas.getObjects().forEach(obj => {
+                    if (obj.bankId) {
+                        const el = document.getElementById(obj.bankId);
+                        if (el) el.classList.add('used');
+                    }
+                });
+                canvas.renderAll();
+            });
+        } catch(e) {}
     }
 
     window.onload = generateWordBank;
