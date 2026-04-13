@@ -2,28 +2,62 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Syntaxis v17.2 | Auto-Scroll Build</title>
+    <title>Σyntaxis v17.3 | The Exegetical Toolkit</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
     <style>
         :root { --teal: #1a535c; --accent: #3498db; --gold: #d4c8aa; --red: #e74c3c; --maroon: #800000; }
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #95a5a6; font-family: 'Times New Roman', serif; }
+        
         #app-root { display: flex; flex-direction: column; height: 100vh; }
-        #top-panel { height: 165px; 
-    background: #000000; /* Solid Black */
-    color: white; 
-    padding: 10px 20px; 
-    flex-shrink: 0; 
-    display: flex; 
-    flex-direction: column; 
-    box-sizing: border-box;}
+        
+        /* New Black Header Style */
+        #top-panel { 
+            min-height: 165px; 
+            background: #000000; 
+            color: white; 
+            padding: 15px 20px; 
+            flex-shrink: 0; 
+            display: flex; 
+            flex-direction: column; 
+            box-sizing: border-box; 
+        }
+
+        .input-row { 
+            display: flex; 
+            gap: 15px; 
+            align-items: center; 
+            margin-bottom: 12px; 
+            flex-wrap: wrap; 
+        }
+
         .input-field { padding: 8px; font-size: 16px; border-radius: 4px; border: none; }
-        #word-bank { flex: 1; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 10px; padding: 5px 0; border-top: 1px solid rgba(255,255,255,0.2); }
-        .word { cursor: grab; font-size: 18px; color: white; padding: 2px 4px; user-select: none; }
+        
+        /* 14pt Word Bank with Scrolling */
+        #word-bank { 
+            flex: 1; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 8px; 
+            padding: 8px 0; 
+            border-top: 1px solid rgba(255,255,255,0.2); 
+            align-content: flex-start;
+        }
+        .word { 
+            cursor: grab; 
+            font-size: 14pt; 
+            color: white; 
+            padding: 2px 4px; 
+            user-select: none; 
+            white-space: nowrap;
+        }
+
         #main-container { display: flex; flex: 1; overflow: hidden; }
         #left-bar { width: 130px; background: #f0f0f0; border-right: 2px solid #7f8c8d; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 8px; padding: 10px; flex-shrink: 0; }
         .shape-btn { width: 50px; height: 45px; background: white; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .shape-btn svg { width: 35px; height: 25px; }
         #canvas-wrapper { flex: 1; position: relative; background: #f4ecd8; overflow: hidden; }
+        
         #right-bar { width: 400px; background: #fdfdfd; border-left: 2px solid #7f8c8d; display: flex; flex-direction: column; overflow: hidden; }
         .tab-link { flex: 1; padding: 10px; text-align: center; cursor: pointer; font-size: 10pt; font-weight: bold; color: #666; background: #d4d4d4; }
         .tab-link.active { background: white; color: var(--teal); border-bottom: 2px solid white; }
@@ -35,15 +69,17 @@
 </head>
 <body>
 
-<div class="input-row">
-    <b style="font-size: 24pt; color: white; font-family: 'Times New Roman', serif;">
-        &Sigma;yntaxis v17.3 | <span style="font-size: 18pt; font-weight: normal; color: #d4c8aa;">The Exegetical Toolkit</span>
-    </b>
-    <div style="flex:1;"></div> <input type="text" id="refIn" value="1Pe 1:1" style="width: 100px;" class="input-field">
-    <input type="text" id="passIn" value="Πέτρος ἀπόστολος Ἰησοῦ Χριστοῦ" style="flex:1;" class="input-field">
-    <button onclick="makeBank()" style="background:var(--accent); color:white; border:none; padding: 8px 15px; border-radius:4px; cursor:pointer;">Update</button>
-    <button onclick="deleteSelected()" style="background:var(--red); color:white; border:none; padding: 8px 15px; border-radius:4px; cursor:pointer;">Delete</button>
-</div>
+<div id="app-root">
+    <div id="top-panel">
+        <div class="input-row">
+            <div style="font-size: 24pt; color: white; font-family: 'Times New Roman', serif; flex-basis: 100%; margin-bottom: 5px;">
+                &Sigma;yntaxis v17.3 | <span style="font-size: 18pt; font-weight: normal; color: #d4c8aa;">The Exegetical Toolkit</span>
+            </div>
+            <input type="text" id="refIn" value="1Pe 1:1" style="width: 100px;" class="input-field">
+            <input type="text" id="passIn" value="Πέτρος ἀπόστολος Ἰησοῦ Χριστοῦ" style="flex:1; min-width: 300px;" class="input-field">
+            <button onclick="makeBank()" style="background:var(--accent); color:white; border:none; padding: 8px 20px; border-radius:4px; cursor:pointer; font-weight:bold;">Update</button>
+            <button onclick="deleteSelected()" style="background:var(--red); color:white; border:none; padding: 8px 20px; border-radius:4px; cursor:pointer; font-weight:bold;">Delete</button>
+        </div>
         <div id="word-bank"></div>
     </div>
 
@@ -82,26 +118,18 @@
 <script>
     const canvas = new fabric.Canvas('c', { width: window.innerWidth - 530, height: window.innerHeight - 165, selection: true });
 
-    // --- AUTO-SCROLL ENGINE ---
+    // --- AUTO-SCROLL ENGINE (v17.2 Logic) ---
     canvas.on('object:moving', function(e) {
-        const obj = e.target;
-        const pointer = canvas.getPointer(e.e);
         const vpt = canvas.viewportTransform;
         const buffer = 50; 
         const speed = 7;
-
-        // X-axis scroll
         if (e.e.clientX > (canvas.width + 130 - buffer)) { vpt[4] -= speed; }
         if (e.e.clientX < (130 + buffer)) { vpt[4] += speed; }
-
-        // Y-axis scroll
         if (e.e.clientY > (canvas.height + 165 - buffer)) { vpt[5] -= speed; }
         if (e.e.clientY < (165 + buffer)) { vpt[5] += speed; }
-
         canvas.requestRenderAll();
     });
 
-    // Zoom stays manual wheel
     canvas.on('mouse:wheel', function(opt) {
         let zoom = canvas.getZoom() * (0.999 ** opt.e.deltaY);
         zoom = Math.min(Math.max(0.01, zoom), 20);
@@ -111,7 +139,6 @@
 
     function resetView() { canvas.setViewportTransform([1, 0, 0, 1, 0, 0]); canvas.setZoom(1); }
 
-    // --- DELETE ENGINE ---
     function deleteSelected() {
         const active = canvas.getActiveObjects();
         active.forEach(obj => {
@@ -128,7 +155,6 @@
         canvas.discardActiveObject().renderAll();
     }
 
-    // --- SHORTCUTS ---
     window.addEventListener('keydown', (e) => {
         if (document.activeElement.tagName === "INPUT") return;
         if (e.key === "Delete" || e.key === "Backspace") deleteSelected();
@@ -144,7 +170,7 @@
         }
     });
 
-    // --- CURVE ENGINE (1.5px Uniform) ---
+    // --- SHAPES & CURVES (1.5px Uniform Stroke) ---
     function addCurve() {
         const pts = [{x:100,y:100},{x:150,y:100},{x:100,y:200},{x:150,y:200}];
         const curve = new fabric.Path(`M ${pts[0].x} ${pts[0].y} C ${pts[1].x} ${pts[1].y} ${pts[2].x} ${pts[2].y} ${pts[3].x} ${pts[3].y}`, {
@@ -169,7 +195,6 @@
         for(let i=0; i<4; i++) { const h = makeH(i); curve.handles.push(h); canvas.add(h); }
     }
 
-    // --- SHAPES ENGINE (1.5px Uniform) ---
     function addShape(t) {
         const p = { stroke:'#000', strokeWidth:1.5, fill:'transparent', strokeUniform:true };
         let obj;
