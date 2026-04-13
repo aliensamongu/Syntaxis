@@ -2,386 +2,215 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Syntaxis v11.4 | The Exegetical Toolkit</title>
+    <title>Syntaxis v17.2 | Auto-Scroll Build</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
     <style>
-        :root { --teal: #1a535c; --accent: #3498db; --gold: #d4c8aa; --light: #fdfdfd; --red: #e74c3c; --maroon: #800000; }
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; font-family: 'Times New Roman', serif; background: #bdc3c7; }
-        #app-root { display: flex; height: 100vh; flex-direction: column; }
-        
-        #top-panel { background: var(--teal); color: white; padding: 12px 20px; z-index: 1000; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
-        .header-main { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 10px; }
-        
-        #word-bank { 
-            display: flex; 
-            flex-wrap: wrap; 
-            gap: 10px; 
-            padding: 8px 0; 
-            border-top: 1px solid rgba(255,255,255,0.2); 
-            height: 100px; 
-            overflow-y: auto; 
-            scrollbar-width: thin;
-        }
-        #word-bank::-webkit-scrollbar { width: 6px; }
-        #word-bank::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 10px; }
-
-        .word-item { cursor: grab; font-size: 18px; color: white; user-select: none; padding: 2px 5px; border-radius: 3px; border: 1px solid transparent; }
-        .word-item:active { cursor: grabbing; }
-        .word-item:hover { border-color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.1); }
-        .word-item.used { text-decoration: line-through; opacity: 0.3; pointer-events: none; }
-
-        #main-layout { display: flex; flex: 1; width: 100vw; overflow: hidden; }
-        #left-sidebar { width: 90px; background: #eee; border-right: 1px solid #95a5a6; display: flex; flex-direction: column; align-items: center; padding: 10px; overflow-y: auto; flex-shrink: 0; }
-        #right-sidebar { width: 220px; background: #f8f9fa; border-left: 1px solid #95a5a6; display: flex; flex-direction: column; padding: 12px; overflow-y: auto; flex-shrink: 0; font-family: sans-serif; }
-        #workspace { flex-grow: 1; background: #95a5a6; position: relative; overflow: hidden; }
-
-        .tool-title { font-size: 9px; color: #7f8c8d; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 3px; margin: 12px 0 8px 0; text-align: center; }
-        .shape-btn { width: 70px; height: 50px; background: white; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .shape-btn svg { width: 100%; height: 100%; }
-        .shape-btn path, .shape-btn line, .shape-btn polyline { stroke: #333; fill: none; stroke-width: 2.5; }
-
-        textarea { width: 100%; height: 80px; border: 1px solid #ddd; border-radius: 4px; padding: 6px; font-size: 13px; resize: none; margin-bottom: 8px; box-sizing: border-box; }
-        .style-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
-        .color-swatch { width: 100%; aspect-ratio: 1; border-radius: 2px; cursor: pointer; border: 1px solid transparent; }
-        .color-swatch.active { border-color: #000; box-shadow: inset 0 0 0 1px #fff; }
-        
-        button { padding: 8px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 5px; font-size: 11px; text-transform: uppercase; }
-        .btn-maroon { background: var(--maroon); color: white; }
-        .btn-green { background: #27ae60; color: white; }
-        .btn-blue { background: var(--accent); color: white; }
-        .btn-red { background: var(--red); color: white; }
-
-        #note-popup { position: absolute; display: none; background: white; border: 2px solid var(--teal); padding: 10px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 2000; width: 220px; }
+        :root { --teal: #1a535c; --accent: #3498db; --gold: #d4c8aa; --red: #e74c3c; --maroon: #800000; }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #95a5a6; font-family: 'Times New Roman', serif; }
+        #app-root { display: flex; flex-direction: column; height: 100vh; }
+        #top-panel { height: 165px; 
+    background: #000000; /* Solid Black */
+    color: white; 
+    padding: 10px 20px; 
+    flex-shrink: 0; 
+    display: flex; 
+    flex-direction: column; 
+    box-sizing: border-box;}
+        .input-field { padding: 8px; font-size: 16px; border-radius: 4px; border: none; }
+        #word-bank { flex: 1; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 10px; padding: 5px 0; border-top: 1px solid rgba(255,255,255,0.2); }
+        .word { cursor: grab; font-size: 18px; color: white; padding: 2px 4px; user-select: none; }
+        #main-container { display: flex; flex: 1; overflow: hidden; }
+        #left-bar { width: 130px; background: #f0f0f0; border-right: 2px solid #7f8c8d; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 8px; padding: 10px; flex-shrink: 0; }
+        .shape-btn { width: 50px; height: 45px; background: white; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .shape-btn svg { width: 35px; height: 25px; }
+        #canvas-wrapper { flex: 1; position: relative; background: #f4ecd8; overflow: hidden; }
+        #right-bar { width: 400px; background: #fdfdfd; border-left: 2px solid #7f8c8d; display: flex; flex-direction: column; overflow: hidden; }
+        .tab-link { flex: 1; padding: 10px; text-align: center; cursor: pointer; font-size: 10pt; font-weight: bold; color: #666; background: #d4d4d4; }
+        .tab-link.active { background: white; color: var(--teal); border-bottom: 2px solid white; }
+        .tab-content { display: none; padding: 15px; flex: 1; overflow-y: auto; }
+        .tab-content.active { display: block; }
+        .ms-row { font-size: 14pt; margin-bottom: 12px; line-height: 1.5; border-bottom: 1px dotted #ccc; padding-bottom: 6px; color: #000; }
+        .ms-sigla { font-weight: 900; color: var(--maroon); width: 75px; display: inline-block; font-family: 'Arial', sans-serif; }
     </style>
 </head>
 <body>
 
-<div id="app-root">
-    <div id="top-panel">
-        <div class="header-main">
-            <div>
-                <span style="font-size:22px; color:var(--gold); font-weight: bold;">Syntaxis:</span>
-                <span style="font-size:16px; color:var(--light); font-style: italic; margin-left: 5px;">The Exegetical Toolkit</span>
-            </div>
-            <div style="display:flex; gap:8px; width:65%;">
-                <input type="text" id="refInput" style="width:130px; text-align:center; border-radius:3px; border:none; padding:6px;" value="Colossians 1:1">
-                <input type="text" id="passageInput" value="Παῦλος ἀπόστολος Χριστοῦ Ἰησοῦ" style="flex-grow:1; padding:6px; border-radius:3px; border:none;">
-                <button style="width:auto; background:var(--accent); color:white; margin:0; padding: 0 15px;" onclick="generateWordBank()">Update</button>
-            </div>
-        </div>
+<div class="input-row">
+    <b style="font-size: 24pt; color: white; font-family: 'Times New Roman', serif;">
+        &Sigma;yntaxis v17.3 | <span style="font-size: 18pt; font-weight: normal; color: #d4c8aa;">The Exegetical Toolkit</span>
+    </b>
+    <div style="flex:1;"></div> <input type="text" id="refIn" value="1Pe 1:1" style="width: 100px;" class="input-field">
+    <input type="text" id="passIn" value="Πέτρος ἀπόστολος Ἰησοῦ Χριστοῦ" style="flex:1;" class="input-field">
+    <button onclick="makeBank()" style="background:var(--accent); color:white; border:none; padding: 8px 15px; border-radius:4px; cursor:pointer;">Update</button>
+    <button onclick="deleteSelected()" style="background:var(--red); color:white; border:none; padding: 8px 15px; border-radius:4px; cursor:pointer;">Delete</button>
+</div>
         <div id="word-bank"></div>
     </div>
 
-    <div id="main-layout">
-        <div id="left-sidebar">
-            <div class="tool-title">Shapes</div>
-            <div class="shape-btn" onclick="addShape('standard')"><svg viewBox="0 0 100 60"><line x1="10" y1="30" x2="90" y2="30"/></svg></div>
-            <div class="shape-btn" onclick="addShape('subj-pred')"><svg viewBox="0 0 100 60"><line x1="10" y1="30" x2="90" y2="30"/><line x1="50" y1="10" x2="50" y2="50"/></svg></div>
-            <div class="shape-btn" onclick="addShape('l-modifier')"><svg viewBox="0 0 100 60"><polyline points="20,15 20,45 80,45"/></svg></div>
-            <div class="shape-btn" onclick="addShape('slanted-modifier')"><svg viewBox="0 0 100 60"><polyline points="40,15 20,45 80,45"/></svg></div>
-            <div class="shape-btn" onclick="addShape('vertical-modifier')"><svg viewBox="0 0 100 60"><polyline points="30,10 30,50 80,50"/></svg></div>
-            <div class="shape-btn" onclick="addShape('predicate-fork')"><svg viewBox="0 0 100 60"><path d="M10,30 L30,30 L55,10 L90,10 M30,30 L55,50 L90,50 M55,10 L55,50" /></svg></div>
-            <div class="shape-btn" onclick="addShape('dashed-curve')"><svg viewBox="0 0 100 60"><path d="M10,45 C30,15 70,15 90,45" stroke-dasharray="3,3"/></svg></div>
+    <div id="main-container">
+        <div id="left-bar">
+            <div class="shape-btn" onclick="addShape('line')"><svg viewBox="0 0 100 60"><line x1="10" y1="30" x2="90" y2="30" stroke="black" stroke-width="2"/></svg></div>
+            <div class="shape-btn" onclick="addShape('cross')"><svg viewBox="0 0 100 60"><line x1="10" y1="30" x2="90" y2="30" stroke="black" stroke-width="2"/><line x1="50" y1="10" x2="50" y2="50" stroke="black" stroke-width="2"/></svg></div>
+            <div class="shape-btn" onclick="addShape('do')"><svg viewBox="0 0 100 60"><line x1="10" y1="30" x2="90" y2="30" stroke="black" stroke-width="2"/><line x1="10" y1="10" x2="10" y2="30" stroke="black" stroke-width="2"/></svg></div>
+            <div class="shape-btn" onclick="addShape('mod')"><svg viewBox="0 0 100 60"><polyline points="30,10 30,45 80,45" fill="none" stroke="black" stroke-width="2"/></svg></div>
+            <div class="shape-btn" onclick="addCurve()"><svg viewBox="0 0 100 60"><path d="M20,10 C20,30 80,30 80,50" fill="none" stroke="black" stroke-width="1.5" stroke-dasharray="6,4"/></svg></div>
+            <div class="shape-btn" onclick="addShape('fork')"><svg viewBox="0 0 100 60"><line x1="10" y1="30" x2="40" y2="30" stroke="black" stroke-width="2"/><polyline points="40,30 60,10 90,10" fill="none" stroke="black" stroke-width="2"/><polyline points="40,30 60,50 90,50" fill="none" stroke="black" stroke-width="2"/></svg></div>
+            <div style="font-size:7.5pt; margin-top:15px; color:#555;"><b>Drag to Edges</b> to Pan<br><b>⌘ + G:</b> Group</div>
+            <button onclick="resetView()" style="width:100%; margin-top:10px; font-size:8pt; cursor:pointer;">Recenter</button>
         </div>
-
-        <div id="workspace">
-            <canvas id="main-canvas"></canvas>
-            <div id="note-popup">
-                <textarea id="note-text" placeholder="Word note..."></textarea>
-                <button class="btn-maroon" onclick="closeNote()">Save Note</button>
+        <div id="canvas-wrapper"><canvas id="c"></canvas></div>
+        <div id="right-bar">
+            <div style="display:flex;"><div class="tab-link active" onclick="switchTab(event, 'tab-app')">Apparatus</div><div class="tab-link" onclick="switchTab(event, 'tab-ms')">Witnesses</div></div>
+            <div id="tab-app" class="tab-content active">
+                <button style="background:#2c3e50; color:white; width:100%; padding:10px; border:none; border-radius:4px;" onclick="openTerry()">📖 Open Terry's Commentary</button>
+                <div style="font-weight:bold; color:var(--teal); margin-top:15px;">READINGS</div>
+                <table id="app-table" style="width:100%; border-collapse:collapse; margin-top:5px; font-size:9pt;"></table>
+                <button onclick="addRow()" style="width:100%; margin-top:10px;">+ Add Row</button>
             </div>
-        </div>
-
-        <div id="right-sidebar">
-            <div class="tool-title">Analysis</div>
-            <button class="btn-maroon" onclick="addFootnoteTag()">Add [α] Tag</button>
-            <div class="tool-title">Apparatus</div>
-            <textarea id="critNotes" placeholder="Manuscript notes..."></textarea>
-            <div class="tool-title">Color</div>
-            <div id="color-grid" class="style-grid"></div>
-            <div class="tool-title">Project</div>
-            <button class="btn-blue" onclick="loadProject()">Load Project</button>
-            <button class="btn-green" onclick="saveWithPicker()">Save As...</button>
-            <button class="btn-red" onclick="deleteSelected()">Delete</button>
+            <div id="tab-ms" class="tab-content">
+                <div id="ms-list">
+                    <div class="ms-row"><span class="ms-sigla">א (01)</span> Sinaiticus</div>
+                    <div class="ms-row"><span class="ms-sigla">B (03)</span> Vaticanus</div>
+                    <div class="ms-row"><span class="ms-sigla">P46</span> Beatty II</div>
+                    <div class="ms-row"><span class="ms-sigla">P72</span> Bodmer VII-VIII</div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    const canvas = new fabric.Canvas('main-canvas', { 
-        width: 5000, 
-        height: 5000, 
-        backgroundColor: '#f4ecd8',
-        fireRightClick: true,
-        stopContextMenu: true
-    });
-    let activeColor = '#000000';
-    let currentOpenNoteObj = null;
+    const canvas = new fabric.Canvas('c', { width: window.innerWidth - 530, height: window.innerHeight - 165, selection: true });
 
-    fabric.Object.prototype.set({
-        transparentCorners: false,
-        cornerColor: '#3498db',
-        cornerStyle: 'circle',
-        cornerSize: 10,
-        borderColor: '#3498db'
-    });
+    // --- AUTO-SCROLL ENGINE ---
+    canvas.on('object:moving', function(e) {
+        const obj = e.target;
+        const pointer = canvas.getPointer(e.e);
+        const vpt = canvas.viewportTransform;
+        const buffer = 50; 
+        const speed = 7;
 
-    // --- REFINED DRAG AND DROP ---
-    const workspace = document.getElementById('workspace');
+        // X-axis scroll
+        if (e.e.clientX > (canvas.width + 130 - buffer)) { vpt[4] -= speed; }
+        if (e.e.clientX < (130 + buffer)) { vpt[4] += speed; }
 
-    // Prevent default to allow drop
-    workspace.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'copy';
+        // Y-axis scroll
+        if (e.e.clientY > (canvas.height + 165 - buffer)) { vpt[5] -= speed; }
+        if (e.e.clientY < (165 + buffer)) { vpt[5] += speed; }
+
+        canvas.requestRenderAll();
     });
 
-    workspace.addEventListener('drop', (e) => {
-        e.preventDefault();
-        const dataStr = e.dataTransfer.getData('text/plain');
-        if (!dataStr) return;
-
-        try {
-            const wordData = JSON.parse(dataStr);
-            // Calculate mouse position relative to the canvas
-            const rect = canvas.getElement().getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-
-            addWordToCanvas(wordData.text, wordData.id, x, y);
-        } catch (err) {
-            console.error("Drop error:", err);
-        }
+    // Zoom stays manual wheel
+    canvas.on('mouse:wheel', function(opt) {
+        let zoom = canvas.getZoom() * (0.999 ** opt.e.deltaY);
+        zoom = Math.min(Math.max(0.01, zoom), 20);
+        canvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
+        opt.e.preventDefault();
     });
 
-    function addWordToCanvas(text, id, x, y) {
-        const txt = new fabric.IText(text, { 
-            left: x, 
-            top: y, 
-            fontSize: 20, 
-            fill: activeColor, 
-            bankId: id,
-            originX: 'center',
-            originY: 'center'
-        });
-        canvas.add(txt).setActiveObject(txt).renderAll();
-        const el = document.getElementById(id);
-        if (el) el.classList.add('used');
-    }
+    function resetView() { canvas.setViewportTransform([1, 0, 0, 1, 0, 0]); canvas.setZoom(1); }
 
-    // Keyboard Precision & Global Controls
-    window.addEventListener('keydown', (e) => {
-        if (['TEXTAREA', 'INPUT'].includes(document.activeElement.tagName)) return;
-
-        const activeObjects = canvas.getActiveObjects();
-        if (activeObjects.length === 0) return;
-
-        if (e.key === 'Delete' || e.key === 'Backspace') {
-            deleteSelected();
-            e.preventDefault();
-        }
-
-        const step = e.shiftKey ? 10 : 1;
-        let moved = false;
-        if (e.key === 'ArrowUp') { activeObjects.forEach(o => o.top -= step); moved = true; }
-        if (e.key === 'ArrowDown') { activeObjects.forEach(o => o.top += step); moved = true; }
-        if (e.key === 'ArrowLeft') { activeObjects.forEach(o => o.left -= step); moved = true; }
-        if (e.key === 'ArrowRight') { activeObjects.forEach(o => o.left += step); moved = true; }
-
-        if (moved) {
-            activeObjects.forEach(o => {
-                o.setCoords();
-                if(o.isCurvePart) o.fire('moving'); 
-                if(o.type === 'i-text') updateDotPosition(o);
-            });
-            canvas.requestRenderAll();
-            e.preventDefault();
-        }
-    });
-
-    function openBLB(wordText) {
-        const ref = document.getElementById('refInput').value.trim();
-        const match = ref.match(/^(\d?\s?[a-zA-Z]+)\s+(\d+)[:\.](\d+)/i);
-        if (match) {
-            let bookName = match[1].trim();
-            let chapter = match[2];
-            let verse = match[3];
-            let bookParts = bookName.split(' ');
-            let abbrev = bookParts.length > 1 ? bookParts[0] + bookParts[1].substring(0, 2) : bookName.substring(0, 3);
-            const isGreek = /[Ͱ-Ͽ]/.test(wordText);
-            const version = isGreek ? 'mgnt' : 'kjv';
-            window.open(`https://www.blueletterbible.org/${version}/${abbrev}/${chapter}/${verse}`, '_blank');
-        }
-    }
-
-    canvas.on('mouse:down', function(opt) {
-        if (!opt.target) return;
-        const isOption = opt.e.altKey;
-        const isCmdCtrl = opt.e.metaKey || opt.e.ctrlKey;
-        if (isOption && !isCmdCtrl && opt.target.type === 'i-text') { openBLB(opt.target.text); return; }
-        if (isOption && isCmdCtrl && opt.target.type === 'i-text') { showNotePopup(opt.target, opt.e.clientX, opt.e.clientY); return; }
-        if (opt.target.isRedDot) showNotePopup(opt.target.parentWord, opt.e.clientX, opt.e.clientY);
-    });
-
-    function showNotePopup(obj, x, y) {
-        currentOpenNoteObj = obj;
-        const pop = document.getElementById('note-popup');
-        pop.style.display = 'block';
-        pop.style.left = Math.min(x, window.innerWidth - 250) + 'px';
-        pop.style.top = Math.min(y, window.innerHeight - 150) + 'px';
-        document.getElementById('note-text').value = obj.noteData || "";
-        document.getElementById('note-text').focus();
-    }
-
-    function closeNote() {
-        if (currentOpenNoteObj) {
-            const val = document.getElementById('note-text').value;
-            currentOpenNoteObj.noteData = val;
-            if (val.trim() !== "") {
-                if (!currentOpenNoteObj.redDot) {
-                    const dot = new fabric.Circle({ radius: 4, fill: 'red', isRedDot: true, parentWord: currentOpenNoteObj, selectable: true });
-                    currentOpenNoteObj.redDot = dot;
-                    canvas.add(dot);
-                }
-                updateDotPosition(currentOpenNoteObj);
-            } else if (currentOpenNoteObj.redDot) {
-                canvas.remove(currentOpenNoteObj.redDot);
-                currentOpenNoteObj.redDot = null;
-            }
-        }
-        document.getElementById('note-popup').style.display = 'none';
-        canvas.renderAll();
-    }
-
-    function updateDotPosition(word) {
-        if (word.redDot) {
-            word.redDot.set({ left: word.left + (word.width / 2) - 2, top: word.top - 10 });
-            word.redDot.setCoords();
-        }
-    }
-    canvas.on('object:moving', (e) => updateDotPosition(e.target));
-
-    const colors = ['#000000', '#1a535c', '#3498db', '#e74c3c', '#27ae60', '#f39c12', '#8e44ad', '#800000'];
-    const grid = document.getElementById('color-grid');
-    colors.forEach(c => {
-        const div = document.createElement('div');
-        div.className = 'color-swatch' + (c === activeColor ? ' active' : '');
-        div.style.backgroundColor = c;
-        div.onclick = () => {
-            activeColor = c;
-            document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
-            div.classList.add('active');
-            canvas.getActiveObjects().forEach(obj => {
-                if (obj.type === 'i-text') obj.set('fill', c);
-                else if (obj.type === 'group') obj.getObjects().forEach(o => o.set('stroke', c));
-                else obj.set('stroke', c);
-            });
-            canvas.renderAll(); 
-        };
-        grid.appendChild(div);
-    });
-
-    function addShape(type) {
-        const s = { stroke: activeColor, strokeWidth: 2.5, fill: 'transparent', strokeUniform: true };
-        let obj;
-        if (type === 'standard') obj = new fabric.Line([0,0,140,0], s);
-        else if (type === 'subj-pred') obj = new fabric.Group([new fabric.Line([-50,0,50,0], s), new fabric.Line([0,-25,0,25], s)]);
-        else if (type === 'l-modifier') obj = new fabric.Polyline([{x:0,y:0},{x:0,y:40},{x:80,y:40}], s);
-        else if (type === 'slanted-modifier') obj = new fabric.Polyline([{x:30,y:0},{x:0,y:40},{x:80,y:40}], s);
-        else if (type === 'vertical-modifier') obj = new fabric.Polyline([{x:0,y:0},{x:0,y:50},{x:60,y:50}], s);
-        else if (type === 'predicate-fork') obj = new fabric.Path('M 0 30 L 25 30 L 55 10 L 100 10 M 25 30 L 55 50 L 100 50 M 55 10 L 55 50', s);
-        else if (type === 'dashed-curve') { createUniversalCurve(400, 400); return; }
-        if(obj) { obj.set({left: 300, top: 300}); canvas.add(obj).setActiveObject(obj).renderAll(); }
-    }
-
-    function createUniversalCurve(x, y) {
-        const p = new fabric.Path(`M ${x} ${y} Q ${x+100} ${y-100} ${x+200} ${y}`, {
-            stroke: activeColor, strokeWidth: 2.5, fill: 'transparent', strokeDashArray: [5,5],
-            selectable: true, hasBorders: false, hasControls: false, objectCaching: false, isCurvePart: true, isMainCurvePath: true
-        });
-        const makeH = (hx, hy, color) => new fabric.Circle({ left: hx, top: hy, radius: 8, fill: color, originX: 'center', originY: 'center', hasControls: false, selectable: true, isHandle: true, isCurvePart: true });
-        const start = makeH(x, y, '#1a535c'); const end = makeH(x + 200, y, '#1a535c'); const control = makeH(x + 100, y - 50, '#3498db');
-        p.assocHandles = [start, end, control];
-        const sync = () => { p.set({ path: [['M', start.left, start.top], ['Q', control.left, control.top, end.left, end.top]] }); canvas.renderAll(); };
-        [start, end, control].forEach(h => h.on('moving', sync));
-        canvas.add(p, start, end, control).renderAll();
-    }
-
-    function generateWordBank() {
-        const bank = document.getElementById('word-bank'); bank.innerHTML = '';
-        const input = document.getElementById('passageInput').value.trim();
-        const words = input.split(/\s+/);
-        words.forEach((t, i) => {
-            const id = `w-${i}`;
-            const s = document.createElement('span'); 
-            s.className = 'word-item'; s.textContent = t; s.id = id;
-            s.draggable = true;
-            
-            // Legacy click support
-            s.onclick = () => addWordToCanvas(t, id, 200, 200);
-            
-            // Drag start
-            s.ondragstart = (e) => {
-                e.dataTransfer.effectAllowed = 'copy';
-                e.dataTransfer.setData('text/plain', JSON.stringify({text: t, id: id}));
-            };
-            
-            bank.appendChild(s);
-        });
-    }
-
-    function addFootnoteTag() {
-        const t = new fabric.IText('[α]', { left: 150, top: 150, fontSize: 18, fill: '#800000', fontWeight: 'bold' });
-        canvas.add(t).setActiveObject(t).renderAll();
-    }
-
+    // --- DELETE ENGINE ---
     function deleteSelected() {
-        canvas.getActiveObjects().forEach(o => {
-            if(o.bankId) document.getElementById(o.bankId).classList.remove('used');
-            if(o.redDot) canvas.remove(o.redDot);
-            if(o.isMainCurvePath && o.assocHandles) o.assocHandles.forEach(h => canvas.remove(h));
-            if(!o.isHandle) canvas.remove(o);
+        const active = canvas.getActiveObjects();
+        active.forEach(obj => {
+            if (obj.curveRef) {
+                canvas.remove(obj.curveRef);
+                obj.curveRef.handles.forEach(h => canvas.remove(h));
+            } else if (obj.handles) {
+                obj.handles.forEach(h => canvas.remove(h));
+                canvas.remove(obj);
+            } else {
+                canvas.remove(obj);
+            }
         });
         canvas.discardActiveObject().renderAll();
     }
 
-    async function saveWithPicker() {
-        try {
-            const state = {
-                canvas: canvas.toJSON(['bankId', 'noteData', 'isRedDot']),
-                ref: document.getElementById('refInput').value,
-                passage: document.getElementById('passageInput').value,
-                critNotes: document.getElementById('critNotes').value
-            };
-            const handle = await window.showSaveFilePicker({ suggestedName: 'diagram.json', types: [{ accept: {'application/json': ['.json']} }] });
-            const writable = await handle.createWritable();
-            await writable.write(JSON.stringify(state));
-            await writable.close();
-        } catch(e) {}
-    }
+    // --- SHORTCUTS ---
+    window.addEventListener('keydown', (e) => {
+        if (document.activeElement.tagName === "INPUT") return;
+        if (e.key === "Delete" || e.key === "Backspace") deleteSelected();
+        if ((e.ctrlKey || e.metaKey) && e.key === 'g' && !e.shiftKey) {
+            e.preventDefault();
+            if (canvas.getActiveObject()?.type === 'activeSelection') canvas.getActiveObject().toGroup();
+            canvas.requestRenderAll();
+        }
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'G') {
+            e.preventDefault();
+            if (canvas.getActiveObject()?.type === 'group') canvas.getActiveObject().toActiveSelection();
+            canvas.requestRenderAll();
+        }
+    });
 
-    async function loadProject() {
-        try {
-            const [handle] = await window.showOpenFilePicker({ types: [{ accept: {'application/json': ['.json']} }] });
-            const file = await handle.getFile();
-            const contents = await file.text();
-            const state = JSON.parse(contents);
-            document.getElementById('refInput').value = state.ref || "";
-            document.getElementById('passageInput').value = state.passage || "";
-            document.getElementById('critNotes').value = state.critNotes || "";
-            generateWordBank();
-            canvas.loadFromJSON(state.canvas, () => {
-                canvas.getObjects().forEach(obj => {
-                    if (obj.bankId) {
-                        const el = document.getElementById(obj.bankId);
-                        if (el) el.classList.add('used');
-                    }
-                });
-                canvas.renderAll();
+    // --- CURVE ENGINE (1.5px Uniform) ---
+    function addCurve() {
+        const pts = [{x:100,y:100},{x:150,y:100},{x:100,y:200},{x:150,y:200}];
+        const curve = new fabric.Path(`M ${pts[0].x} ${pts[0].y} C ${pts[1].x} ${pts[1].y} ${pts[2].x} ${pts[2].y} ${pts[3].x} ${pts[3].y}`, {
+            stroke:'black', strokeWidth:1.5, fill:'', strokeDashArray:[10,5], selectable:true, objectCaching:false, strokeUniform:true
+        });
+        curve.handles = [];
+        function makeH(i) {
+            const h = new fabric.Circle({ left:pts[i].x, top:pts[i].y, radius:8, fill:'white', stroke:'#3498db', strokeWidth:2, originX:'center', originY:'center', hasControls:false, hasBorders:false });
+            h.curveRef = curve;
+            h.on('moving', () => {
+                pts[i].x = h.left; pts[i].y = h.top;
+                curve.path[0][1] = pts[0].x; curve.path[0][2] = pts[0].y;
+                curve.path[1][1] = pts[1].x; curve.path[1][2] = pts[1].y;
+                curve.path[1][3] = pts[2].x; curve.path[1][4] = pts[2].y;
+                curve.path[1][5] = pts[3].x; curve.path[1][6] = pts[3].y;
+                curve.set({strokeDashArray:[10,5]});
+                canvas.requestRenderAll();
             });
-        } catch(e) {}
+            return h;
+        }
+        canvas.add(curve);
+        for(let i=0; i<4; i++) { const h = makeH(i); curve.handles.push(h); canvas.add(h); }
     }
 
-    window.onload = generateWordBank;
+    // --- SHAPES ENGINE (1.5px Uniform) ---
+    function addShape(t) {
+        const p = { stroke:'#000', strokeWidth:1.5, fill:'transparent', strokeUniform:true };
+        let obj;
+        if(t==='line') obj = new fabric.Rect({width:150, height:1.5, fill:'black', strokeUniform:true});
+        else if(t==='cross') obj = new fabric.Group([new fabric.Rect({width:100,height:1.5,fill:'black',top:15, strokeUniform:true}), new fabric.Rect({width:1.5,height:30,fill:'black',left:50, strokeUniform:true})]);
+        else if(t==='do') obj = new fabric.Group([new fabric.Rect({width:150,height:1.5,fill:'black',top:25, strokeUniform:true}), new fabric.Rect({width:1.5,height:25,fill:'black', strokeUniform:true})]);
+        else if(t==='mod') obj = new fabric.Polyline([{x:0,y:0},{x:0,y:45},{x:75,y:45}], p);
+        else obj = new fabric.Group([new fabric.Line([0,25,30,25],p), new fabric.Polyline([{x:30,y:25},{x:55,y:0},{x:100,y:0}],p), new fabric.Polyline([{x:30,y:25},{x:55,y:50},{x:100,y:50}],p)]);
+        canvas.add(obj.set({left:250, top:250})).setActiveObject(obj).renderAll();
+    }
+
+    function openTerry() {
+        const ref = document.getElementById('refIn').value.toLowerCase().trim();
+        const m = ref.match(/^([1-3]?[a-z]+)\s*(\d+):(\d+)$/);
+        if(!m) return alert("Use: Rom 1:1");
+        const library = {"1pe":"261pt","2pe":"272pt","rom":"14rom","col":"51col","jam":"28jam"};
+        const id = library[m[1].substring(0,3)] || "01mat";
+        window.open(`https://bterry.com/tc2/lay${id}.htm#${m[1].substring(0,3)}${m[2]}_${m[3]}`, '_blank');
+    }
+
+    function makeBank() {
+        const bank = document.getElementById('word-bank'); bank.innerHTML = '';
+        document.getElementById('passIn').value.split(/\s+/).forEach(t => {
+            const s = document.createElement('span'); s.className = 'word'; s.textContent = t; s.draggable = true;
+            s.ondragstart = (e) => e.dataTransfer.setData('text/plain', t);
+            bank.appendChild(s);
+        });
+    }
+
+    canvas.on('drop', opt => {
+        const t = new fabric.IText(opt.e.dataTransfer.getData('text/plain'), { left: canvas.getPointer(opt.e).x, top: canvas.getPointer(opt.e).y, fontSize: 26, fontFamily: 'Times New Roman' });
+        canvas.add(t).setActiveObject(t).renderAll();
+    });
+    canvas.on('dragover', e => e.e.preventDefault());
+    function addRow() { document.getElementById('app-table').innerHTML += `<tr><td contenteditable style="border:1px solid #ddd; padding:5px;"></td><td contenteditable style="border:1px solid #ddd; padding:5px;"></td></tr>`; }
+    function switchTab(e, id) {
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.tab-link').forEach(l => l.classList.remove('active'));
+        document.getElementById(id).classList.add('active'); e.currentTarget.classList.add('active');
+    }
+    window.onload = makeBank;
 </script>
 </body>
 </html>
