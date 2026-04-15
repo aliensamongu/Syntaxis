@@ -23,20 +23,21 @@
         .shape-btn svg { width: 45px; height: 45px; }
 
         #canvas-wrapper { flex: 1; position: relative; background: #f4ecd8; overflow: auto; }
-        #right-bar { width: 340px; background: #fdfdfd; border-left: 2px solid #7f8c8d; display: flex; flex-direction: column; z-index: 50; }
+        #right-bar { width: 360px; background: #fdfdfd; border-left: 2px solid #7f8c8d; display: flex; flex-direction: column; z-index: 50; }
         
         #context-menu { display: none; position: absolute; background: white; border: 1px solid #ccc; box-shadow: 2px 2px 10px rgba(0,0,0,0.2); z-index: 1000; border-radius: 4px; padding: 5px 0; }
         .menu-item { padding: 8px 15px; cursor: pointer; font-size: 10pt; color: #333; min-width: 120px; }
-        .tab-link { flex: 1; padding: 10px; text-align: center; cursor: pointer; font-size: 11pt; font-weight: bold; color: #666; background: #d4d4d4; }
+        .tab-link { flex: 1; padding: 10px 5px; text-align: center; cursor: pointer; font-size: 10pt; font-weight: bold; color: #666; background: #d4d4d4; white-space: nowrap; }
         .tab-link.active { background: white; color: var(--maroon); border-bottom: 2px solid white; }
         .tab-content { display: none; padding: 15px; flex: 1; overflow-y: auto; }
         .tab-content.active { display: block; }
         
         .ms-table { width: 100%; border-collapse: collapse; font-size: 9pt; background: white; border: 1px solid #ddd; margin-top: 5px; }
-        .ms-table td { padding: 5px; border: 1px solid #eee; }
+        .ms-table td { padding: 5px; border: 1px solid #eee; vertical-align: top; }
         .ms-group-header { background: #f9f2e0; font-weight: bold; padding: 6px; margin: 12px 0 4px 0; border-left: 4px solid var(--gold); font-size: 10pt; }
         .q-list { margin: 0; padding-left: 18px; font-size: 10pt; color: #2c3e50; line-height: 1.6; }
         .btn-add { width: 100%; margin-top: 10px; padding: 8px; background: #ecf0f1; border: 1px solid #ccc; cursor: pointer; font-weight: bold; }
+        .abbr-key { font-weight: bold; color: var(--maroon); width: 60px; }
     </style>
 </head>
 <body>
@@ -79,7 +80,11 @@
         <div id="canvas-wrapper"><canvas id="c"></canvas></div>
         
         <div id="right-bar">
-            <div style="display:flex;"><div class="tab-link active" onclick="switchTab(event, 'tab-app')">Apparatus</div><div class="tab-link" onclick="switchTab(event, 'tab-ms')">Witnesses</div></div>
+            <div style="display:flex;">
+                <div class="tab-link active" onclick="switchTab(event, 'tab-app')">Apparatus</div>
+                <div class="tab-link" onclick="switchTab(event, 'tab-ms')">Witnesses</div>
+                <div class="tab-link" onclick="switchTab(event, 'tab-abbr')">Abbreviations</div>
+            </div>
             
             <div id="tab-app" class="tab-content active">
                 <button style="background:#2c3e50; color:white; width:100%; padding:10px; border:none; border-radius:4px; cursor:pointer; margin-bottom:15px;" onclick="openTerry()">📖 Open Terry's Commentary</button>
@@ -130,6 +135,36 @@
                         <tr><td>33</td><td>"Queen of Min."</td><td>IX</td></tr>
                         <tr><td>1739</td><td>(Athos)</td><td>X</td></tr>
                     </tbody>
+                </table>
+            </div>
+
+            <div id="tab-abbr" class="tab-content">
+                <div class="ms-group-header">Manuscript Contents</div>
+                <table class="ms-table">
+                    <tr><td class="abbr-key">g</td><td>Gospels</td></tr>
+                    <tr><td class="abbr-key">a</td><td>Acts</td></tr>
+                    <tr><td class="abbr-key">p</td><td>Paul's letters</td></tr>
+                    <tr><td class="abbr-key">o</td><td>Other letters</td></tr>
+                    <tr><td class="abbr-key">r</td><td>Revelation</td></tr>
+                </table>
+
+                <div class="ms-group-header">Critical Marks</div>
+                <table class="ms-table">
+                    <tr><td class="abbr-key">vid</td><td>Apparently (text hard to read)</td></tr>
+                    <tr><td class="abbr-key">supp</td><td>Text supplied by later copyist</td></tr>
+                    <tr><td class="abbr-key">*</td><td>Original reading</td></tr>
+                    <tr><td class="abbr-key">c</td><td>Correction by a later copyist</td></tr>
+                </table>
+
+                <div class="ms-group-header">Major Translations</div>
+                <table class="ms-table">
+                    <tr><td class="abbr-key">KJV</td><td>King James Version</td></tr>
+                    <tr><td class="abbr-key">NKJV</td><td>New King James Version</td></tr>
+                    <tr><td class="abbr-key">ASV</td><td>American Standard Version</td></tr>
+                    <tr><td class="abbr-key">RSV</td><td>Revised Standard Version</td></tr>
+                    <tr><td class="abbr-key">ESV</td><td>English Standard Version</td></tr>
+                    <tr><td class="abbr-key">NASV</td><td>New American Standard Version</td></tr>
+                    <tr><td class="abbr-key">NIV</td><td>New International Version</td></tr>
                 </table>
             </div>
         </div>
@@ -226,8 +261,16 @@
     
     function saveAs() { const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([JSON.stringify(canvas.toJSON())], {type: "application/json"})); link.download = "Syntaxis_Project.json"; link.click(); }
     function loadCanvas(e) { const reader = new FileReader(); reader.onload = (f) => { canvas.loadFromJSON(f.target.result, () => { canvas.renderAll(); syncWordBank(); }); }; reader.readAsText(e.target.files[0]); }
-    function switchTab(e, id) { document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); document.querySelectorAll('.tab-link').forEach(l => l.classList.remove('active')); document.getElementById(id).classList.add('active'); e.currentTarget.classList.add('active'); }
+    
+    function switchTab(e, id) { 
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); 
+        document.querySelectorAll('.tab-link').forEach(l => l.classList.remove('active')); 
+        document.getElementById(id).classList.add('active'); 
+        e.currentTarget.classList.add('active'); 
+    }
+    
     function openTerry() { window.open('https://bterry.com/tc2/', '_blank'); }
+    
     function addVariantRow() {
         const tbody = document.querySelector('#variant-table tbody');
         const row = document.createElement('tr');
