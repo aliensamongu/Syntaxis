@@ -14,30 +14,48 @@
         .input-field { padding: 8px; font-size: 14px; border-radius: 4px; border: none; background: #fff; color: #333; }
         
         #word-bank { flex: 1; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 0; align-content: flex-start; }
-        .word { cursor: grab; font-size: 14pt; color: white; padding: 2px 4px; user-select: none; transition: opacity 0.3s; border-radius: 3px; }
-        .word.used { text-decoration: line-through; opacity: 0.3; color: #7f8c8d; cursor: default; }
+        .word { cursor: pointer; font-size: 14pt; color: white; padding: 2px 6px; user-select: none; transition: all 0.2s; border-radius: 3px; border: 1px solid transparent; }
+        .word:hover { background: rgba(255,255,255,0.1); }
+        .word.selected { background: var(--gold); color: var(--dark); font-weight: bold; border-color: white; }
+        .word.used { text-decoration: line-through; opacity: 0.3; color: #7f8c8d; cursor: default; pointer-events: none; }
 
-        #main-container { display: flex; flex: 1; overflow: hidden; }
+        #main-container { display: flex; flex: 1; overflow: hidden; position: relative; }
         #left-bar { width: 140px; background: #f0f0f0; border-right: 2px solid #7f8c8d; display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 60px; gap: 8px; padding: 10px; z-index: 50; }
-        .shape-btn { background: white; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .shape-btn { background: white; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .shape-btn svg { width: 45px; height: 45px; }
 
         #canvas-wrapper { flex: 1; position: relative; background: #f4ecd8; overflow: auto; }
-        #right-bar { width: 360px; background: #fdfdfd; border-left: 2px solid #7f8c8d; display: flex; flex-direction: column; z-index: 50; }
         
+        #right-bar { 
+            width: 380px; 
+            background: #fdfdfd; 
+            border-left: 2px solid #7f8c8d; 
+            display: flex; 
+            flex-direction: column; 
+            z-index: 50; 
+            transition: margin-right 0.3s ease;
+            position: relative;
+        }
+        #right-bar.collapsed { margin-right: -380px; }
+        #collapse-btn {
+            position: absolute; left: -25px; top: 50%; transform: translateY(-50%);
+            width: 25px; height: 60px; background: #7f8c8d; color: white;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; border-radius: 5px 0 0 5px; z-index: 60;
+        }
+
         #context-menu { display: none; position: absolute; background: white; border: 1px solid #ccc; box-shadow: 2px 2px 10px rgba(0,0,0,0.2); z-index: 1000; border-radius: 4px; padding: 5px 0; }
-        .menu-item { padding: 8px 15px; cursor: pointer; font-size: 10pt; color: #333; min-width: 120px; }
-        .tab-link { flex: 1; padding: 10px 5px; text-align: center; cursor: pointer; font-size: 10pt; font-weight: bold; color: #666; background: #d4d4d4; white-space: nowrap; }
+        .menu-item { padding: 8px 15px; cursor: pointer; font-size: 10pt; color: #333; }
+        
+        .tab-link { flex: 1; padding: 10px 5px; text-align: center; cursor: pointer; font-size: 10pt; font-weight: bold; color: #666; background: #d4d4d4; }
         .tab-link.active { background: white; color: var(--maroon); border-bottom: 2px solid white; }
         .tab-content { display: none; padding: 15px; flex: 1; overflow-y: auto; }
         .tab-content.active { display: block; }
         
-        .ms-table { width: 100%; border-collapse: collapse; font-size: 9pt; background: white; border: 1px solid #ddd; margin-top: 5px; }
-        .ms-table td { padding: 5px; border: 1px solid #eee; vertical-align: top; }
-        .ms-group-header { background: #f9f2e0; font-weight: bold; padding: 6px; margin: 12px 0 4px 0; border-left: 4px solid var(--gold); font-size: 10pt; }
-        .q-list { margin: 0; padding-left: 18px; font-size: 10pt; color: #2c3e50; line-height: 1.6; }
-        .btn-add { width: 100%; margin-top: 10px; padding: 8px; background: #ecf0f1; border: 1px solid #ccc; cursor: pointer; font-weight: bold; }
-        .abbr-key { font-weight: bold; color: var(--maroon); width: 60px; }
+        .ms-table { width: 100%; border-collapse: collapse; font-size: 9pt; background: white; border: 1px solid #ddd; margin-bottom: 15px; }
+        .ms-table td { padding: 6px; border: 1px solid #eee; vertical-align: top; color: #333; }
+        .ms-group-header { background: #f9f2e0; font-weight: bold; padding: 8px; margin: 15px 0 5px 0; border-left: 4px solid var(--gold); font-size: 10pt; color: var(--maroon); }
+        .abbr-key { font-weight: bold; color: var(--maroon); width: 70px; }
     </style>
 </head>
 <body>
@@ -55,10 +73,10 @@
         <div class="input-row">
             <div style="display:flex; flex-direction:column; margin-right: 25px;">
                 <div style="font-size: 24pt; color: var(--gold); font-weight: bold;">&Sigma;yntaxis</div>
-                <div style="font-size: 10pt; color: white; font-style: italic; opacity: 0.8; padding-left: 3px;">The Exegetical Toolbox</div>
+                <div style="font-size: 10pt; color: white; font-style: italic; opacity: 0.8;">The Exegetical Toolbox</div>
             </div>
             <input type="text" id="passIn" placeholder="Paste Verse..." class="input-field" style="flex:1;" oninput="makeBank()">
-            <button onclick="saveAs()" style="background:#27ae60; color:white; border:none; padding: 8px 12px; border-radius:4px; cursor:pointer;">Save Project As</button>
+            <button onclick="saveAs()" style="background:#27ae60; color:white; border:none; padding: 8px 12px; border-radius:4px; cursor:pointer;">Save Project</button>
             <button onclick="document.getElementById('loadInput').click()" style="background:#f39c12; color:white; border:none; padding: 8px 12px; border-radius:4px; cursor:pointer;">Load Project</button>
             <input type="file" id="loadInput" hidden onchange="loadCanvas(event)" accept=".json">
         </div>
@@ -80,6 +98,7 @@
         <div id="canvas-wrapper"><canvas id="c"></canvas></div>
         
         <div id="right-bar">
+            <div id="collapse-btn" onclick="toggleSidebar()">▶</div>
             <div style="display:flex;">
                 <div class="tab-link active" onclick="switchTab(event, 'tab-app')">Apparatus</div>
                 <div class="tab-link" onclick="switchTab(event, 'tab-ms')">Witnesses</div>
@@ -88,8 +107,8 @@
             
             <div id="tab-app" class="tab-content active">
                 <button style="background:#2c3e50; color:white; width:100%; padding:10px; border:none; border-radius:4px; cursor:pointer; margin-bottom:15px;" onclick="openTerry()">📖 Open Terry's Commentary</button>
-                <div style="background:#fcfaf5; padding:10px; border:1px solid #eee; border-radius:4px;">
-                    <ol class="q-list">
+                <div style="background:#fcfaf5; padding:10px; border:1px solid #eee; margin-bottom:10px;">
+                    <ol style="margin:0; padding-left:20px; font-size:10pt; line-height:1.5;">
                         <li>Which is the oldest manuscript?</li>
                         <li>Which is the shorter reading?</li>
                         <li>Which is the more difficult reading?</li>
@@ -99,71 +118,57 @@
                     <thead><tr style="background:#eee;"><th>Reading</th><th>Witnesses</th></tr></thead>
                     <tbody></tbody>
                 </table>
-                <button class="btn-add" onclick="addVariantRow()">+ Add Variant Row</button>
+                <button onclick="addVariantRow()" style="width:100%; padding:8px;">+ Add Variant Row</button>
             </div>
 
             <div id="tab-ms" class="tab-content">
-                <div class="ms-group-header">Early Papyri</div>
+                <div class="ms-group-header">Papyri</div>
                 <table class="ms-table">
-                    <tbody>
-                        <tr><td>P45</td><td>Chester Beatty I</td><td>III</td></tr>
-                        <tr><td>P46</td><td>Chester Beatty II</td><td>c. 200</td></tr>
-                        <tr><td>P47</td><td>Chester Beatty III</td><td>III</td></tr>
-                        <tr><td>P66</td><td>Bodmer II</td><td>c. 200</td></tr>
-                        <tr><td>P72</td><td>Bodmer VII-VIII</td><td>III/IV</td></tr>
-                        <tr><td>P75</td><td>Bodmer XIV-XV</td><td>III</td></tr>
-                    </tbody>
+                    <tr><td>P45</td><td>Chester Beatty I</td><td>III</td><td>g (Caes.)</td></tr>
+                    <tr><td>P46</td><td>Chester Beatty II</td><td>c. 200</td><td>p (Alex.)</td></tr>
+                    <tr><td>P47</td><td>Chester Beatty III</td><td>late III</td><td>r (Alex.)</td></tr>
+                    <tr><td>P66</td><td>Bodmer II</td><td>c. 200</td><td>g (Alex.)</td></tr>
+                    <tr><td>P72</td><td>Bodmer VII-VIII</td><td>III/IV</td><td>o (Alex.)</td></tr>
+                    <tr><td>P75</td><td>Bodmer XIV-XV</td><td>III</td><td>g (Alex.)</td></tr>
                 </table>
-                <div class="ms-group-header">Major Uncial Codices</div>
+                <div class="ms-group-header">Major Uncials</div>
                 <table class="ms-table">
-                    <tbody>
-                        <tr><td>&alef; (01)</td><td>Sinaiticus</td><td>IV</td></tr>
-                        <tr><td>A (02)</td><td>Alexandrinus</td><td>V</td></tr>
-                        <tr><td>B (03)</td><td>Vaticanus</td><td>IV</td></tr>
-                        <tr><td>C (04)</td><td>Ephraemi</td><td>V</td></tr>
-                        <tr><td>D (05)</td><td>Bezae Cant.</td><td>V</td></tr>
-                        <tr><td>D (06)</td><td>Claromontanus</td><td>VI</td></tr>
-                        <tr><td>L (019)</td><td>Regius</td><td>VIII</td></tr>
-                        <tr><td>W (032)</td><td>Washingtonensis</td><td>V</td></tr>
-                    </tbody>
+                    <tr><td>&alef; (01)</td><td>Sinaiticus*</td><td>IV</td><td>gapor (Alex.)</td></tr>
+                    <tr><td>A (02)</td><td>Alexandrinus</td><td>V</td><td>g (Byz)</td></tr>
+                    <tr><td>B (03)</td><td>Vaticanus</td><td>IV</td><td>gapo (Alex.)</td></tr>
+                    <tr><td>C (04)</td><td>Ephraemi Rescriptus</td><td>V</td><td>gapor (Alex.)</td></tr>
+                    <tr><td>D (05)</td><td>Bezae Cantabrigiensis</td><td>V/VI</td><td>gao (West.)</td></tr>
+                    <tr><td>D (06)</td><td>Claromontanus</td><td>VI</td><td>p (West.)</td></tr>
+                    <tr><td>L (019)</td><td>Regius</td><td>VIII</td><td>g (Alex.)</td></tr>
+                    <tr><td>W (032)</td><td>Freer Gospels</td><td>V</td><td>g (Mixed)</td></tr>
                 </table>
                 <div class="ms-group-header">Important Minuscules</div>
                 <table class="ms-table">
-                    <tbody>
-                        <tr><td>1</td><td>(f1)</td><td>XII</td></tr>
-                        <tr><td>13</td><td>(f13)</td><td>XI-XV</td></tr>
-                        <tr><td>33</td><td>"Queen of Min."</td><td>IX</td></tr>
-                        <tr><td>1739</td><td>(Athos)</td><td>X</td></tr>
-                    </tbody>
+                    <tr><td>1</td><td>XII</td><td>g (Caes.)</td></tr>
+                    <tr><td>33</td><td>IX</td><td>gapo (Alex.)</td></tr>
+                    <tr><td>1739</td><td>X</td><td>po (Alex.)</td></tr>
                 </table>
             </div>
 
             <div id="tab-abbr" class="tab-content">
-                <div class="ms-group-header">Manuscript Contents</div>
+                <div class="ms-group-header">Contents</div>
                 <table class="ms-table">
-                    <tr><td class="abbr-key">g</td><td>Gospels</td></tr>
-                    <tr><td class="abbr-key">a</td><td>Acts</td></tr>
-                    <tr><td class="abbr-key">p</td><td>Paul's letters</td></tr>
-                    <tr><td class="abbr-key">o</td><td>Other letters</td></tr>
-                    <tr><td class="abbr-key">r</td><td>Revelation</td></tr>
+                    <tr><td class="abbr-key">g</td><td>Gospels</td><td class="abbr-key">a</td><td>Acts</td></tr>
+                    <tr><td class="abbr-key">p</td><td>Paul</td><td class="abbr-key">o</td><td>Other Letters</td></tr>
+                    <tr><td class="abbr-key">r</td><td>Revelation</td><td></td><td></td></tr>
                 </table>
-
                 <div class="ms-group-header">Critical Marks</div>
                 <table class="ms-table">
-                    <tr><td class="abbr-key">vid</td><td>Apparently (text hard to read)</td></tr>
-                    <tr><td class="abbr-key">supp</td><td>Text supplied by later copyist</td></tr>
+                    <tr><td class="abbr-key">vid</td><td>Apparently</td></tr>
+                    <tr><td class="abbr-key">supp</td><td>Text supplied by later hand</td></tr>
                     <tr><td class="abbr-key">*</td><td>Original reading</td></tr>
-                    <tr><td class="abbr-key">c</td><td>Correction by a later copyist</td></tr>
+                    <tr><td class="abbr-key">c</td><td>Correction by later copyist</td></tr>
                 </table>
-
-                <div class="ms-group-header">Major Translations</div>
+                <div class="ms-group-header">Translations</div>
                 <table class="ms-table">
-                    <tr><td class="abbr-key">KJV</td><td>King James Version</td></tr>
-                    <tr><td class="abbr-key">NKJV</td><td>New King James Version</td></tr>
-                    <tr><td class="abbr-key">ASV</td><td>American Standard Version</td></tr>
-                    <tr><td class="abbr-key">RSV</td><td>Revised Standard Version</td></tr>
-                    <tr><td class="abbr-key">ESV</td><td>English Standard Version</td></tr>
-                    <tr><td class="abbr-key">NASV</td><td>New American Standard Version</td></tr>
+                    <tr><td class="abbr-key">KJV/NKJ</td><td>King James / New King James</td></tr>
+                    <tr><td class="abbr-key">ASV/RSV</td><td>American Std / Revised Std</td></tr>
+                    <tr><td class="abbr-key">ESV/NAS</td><td>English Std / New Amer. Std</td></tr>
                     <tr><td class="abbr-key">NIV</td><td>New International Version</td></tr>
                 </table>
             </div>
@@ -173,76 +178,110 @@
 
 <script>
     const canvas = new fabric.Canvas('c', { 
-        width: 2500, height: 2500, 
+        width: 3000, height: 3000, 
         preserveObjectStacking: true, fireRightClick: true, stopContextMenu: true 
     });
-    
     const baseStyle = { stroke: 'black', strokeWidth: 2, fill: 'transparent', strokeUniform: true, cornerColor: '#3498db', transparentCorners: false, cornerSize: 8 };
 
     function syncWordBank() {
         const wordsInBank = document.querySelectorAll('.word');
-        const canvasTexts = canvas.getObjects('i-text').map(o => o.text);
+        const activeWords = [];
+        function findText(obj) {
+            if (obj.type === 'i-text') activeWords.push(obj.text);
+            if (obj._objects) obj._objects.forEach(findText);
+        }
+        canvas.getObjects().forEach(findText);
         wordsInBank.forEach(wordSpan => {
-            if (canvasTexts.includes(wordSpan.textContent)) wordSpan.classList.add('used');
-            else wordSpan.classList.remove('used');
+            if (activeWords.includes(wordSpan.textContent)) {
+                wordSpan.classList.add('used');
+                wordSpan.classList.remove('selected');
+                wordSpan.draggable = false;
+            } else {
+                wordSpan.classList.remove('used');
+                wordSpan.draggable = true;
+            }
         });
     }
 
     canvas.on('object:added', syncWordBank);
     canvas.on('object:removed', syncWordBank);
+    canvas.on('after:render', syncWordBank);
+
+    function toggleSidebar() {
+        const bar = document.getElementById('right-bar');
+        const btn = document.getElementById('collapse-btn');
+        bar.classList.toggle('collapsed');
+        btn.textContent = bar.classList.contains('collapsed') ? '◀' : '▶';
+        setTimeout(() => canvas.renderAll(), 350);
+    }
 
     window.addEventListener('keydown', (e) => {
         if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
         const activeObj = canvas.getActiveObject();
-        const step = e.shiftKey ? 10 : 1;
-
         if (e.key === "Delete" || e.key === "Backspace") deleteSelected();
         if ((e.metaKey || e.ctrlKey) && e.key === 'g') { e.preventDefault(); groupSelected(); }
         if ((e.metaKey || e.ctrlKey) && e.key === 'u') { e.preventDefault(); ungroupSelected(); }
-
         if (activeObj && e.key.startsWith("Arrow")) {
             e.preventDefault();
+            const step = e.shiftKey ? 10 : 1;
             if (e.key === "ArrowUp") activeObj.set('top', activeObj.top - step);
             if (e.key === "ArrowDown") activeObj.set('top', activeObj.top + step);
             if (e.key === "ArrowLeft") activeObj.set('left', activeObj.left - step);
             if (e.key === "ArrowRight") activeObj.set('left', activeObj.left + step);
-            activeObj.setCoords();
-            canvas.renderAll();
-            checkExpansion(activeObj);
+            activeObj.setCoords(); canvas.renderAll();
         }
     });
-
-    canvas.on('object:moving', (e) => checkExpansion(e.target));
-
-    function checkExpansion(obj) {
-        const threshold = 150;
-        if (obj.left + (obj.width * obj.scaleX) > canvas.width - threshold) canvas.setWidth(canvas.width + 800);
-        if (obj.top + (obj.height * obj.scaleY) > canvas.height - threshold) canvas.setHeight(canvas.height + 800);
-        canvas.renderAll();
-    }
 
     function deleteSelected() { canvas.getActiveObjects().forEach(o => canvas.remove(o)); canvas.discardActiveObject().renderAll(); }
-    function groupSelected() { const a=canvas.getActiveObject(); if(a && a.type==='activeSelection') a.toGroup(); canvas.requestRenderAll(); }
-    function ungroupSelected() { const a=canvas.getActiveObject(); if(a && a.type==='group') a.toActiveSelection(); canvas.requestRenderAll(); }
-
-    function setStrokeStyle(dash) { 
-        const a = canvas.getActiveObject(); 
-        if (a) {
-            if (a.type === 'group') a.forEachObject(o => o.set('strokeDashArray', dash)); 
-            else a.set('strokeDashArray', dash); 
-            canvas.requestRenderAll(); 
-        }
-        document.getElementById('context-menu').style.display='none'; 
-    }
+    function groupSelected() { const active = canvas.getActiveObject(); if (active && active.type === 'activeSelection') { active.toGroup(); canvas.requestRenderAll(); syncWordBank(); } }
+    function ungroupSelected() { const active = canvas.getActiveObject(); if (active && active.type === 'group') { active.toActiveSelection(); canvas.requestRenderAll(); syncWordBank(); } }
+    function setStrokeStyle(dash) { const a = canvas.getActiveObject(); if (a) { if (a.type === 'group') a.forEachObject(o => o.set('strokeDashArray', dash)); else a.set('strokeDashArray', dash); canvas.requestRenderAll(); } document.getElementById('context-menu').style.display='none'; }
+    canvas.on('mouse:down', (opt) => { if (opt.button === 3 && opt.target) { const menu = document.getElementById('context-menu'); menu.style.display='block'; menu.style.left=opt.e.clientX+'px'; menu.style.top=opt.e.clientY+'px'; canvas.setActiveObject(opt.target); } else document.getElementById('context-menu').style.display='none'; });
     
-    canvas.on('mouse:down', (opt) => { 
-        if (opt.button === 3 && opt.target) { 
-            const menu = document.getElementById('context-menu'); 
-            menu.style.display='block'; menu.style.left=opt.e.clientX+'px'; menu.style.top=opt.e.clientY+'px'; 
-            canvas.setActiveObject(opt.target); 
-        } else document.getElementById('context-menu').style.display='none'; 
+    function makeBank() { 
+        const bank = document.getElementById('word-bank'); 
+        const val = document.getElementById('passIn').value.trim(); 
+        bank.innerHTML = ''; 
+        if(!val) return; 
+        val.split(/\s+/).forEach(t => { 
+            const s = document.createElement('span'); 
+            s.className = 'word'; 
+            s.textContent = t; 
+            s.onclick = () => s.classList.toggle('selected');
+            s.draggable = true; 
+            s.ondragstart = (e) => {
+                const selected = document.querySelectorAll('.word.selected');
+                const wordsToMove = selected.length > 0 ? Array.from(selected).map(w => w.textContent) : [t];
+                e.dataTransfer.setData('text', JSON.stringify(wordsToMove));
+            };
+            bank.appendChild(s); 
+        }); 
+        syncWordBank(); 
+    }
+
+    canvas.on('drop', opt => { 
+        const rawData = opt.e.dataTransfer.getData('text');
+        try {
+            const words = JSON.parse(rawData);
+            const ptr = canvas.getPointer(opt.e);
+            words.forEach((txt, i) => {
+                canvas.add(new fabric.IText(txt, { 
+                    left: ptr.x + (i * 20), 
+                    top: ptr.y + (i * 20), 
+                    fontSize: 22, 
+                    fontFamily: 'Times New Roman' 
+                }));
+            });
+        } catch(e) {
+            canvas.add(new fabric.IText(rawData, { left: canvas.getPointer(opt.e).x, top: canvas.getPointer(opt.e).y, fontSize: 22, fontFamily: 'Times New Roman' }));
+        }
     });
 
+    function saveAs() { const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([JSON.stringify(canvas.toJSON())], {type: "application/json"})); link.download = "Syntaxis_Project.json"; link.click(); }
+    function loadCanvas(e) { const reader = new FileReader(); reader.onload = (f) => { canvas.loadFromJSON(f.target.result, () => { canvas.renderAll(); syncWordBank(); }); }; reader.readAsText(e.target.files[0]); }
+    function switchTab(e, id) { document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); document.querySelectorAll('.tab-link').forEach(l => l.classList.remove('active')); document.getElementById(id).classList.add('active'); e.currentTarget.classList.add('active'); }
+    function openTerry() { window.open('https://bterry.com/tc2/', '_blank'); }
+    function addVariantRow() { const tbody = document.querySelector('#variant-table tbody'); const row = document.createElement('tr'); row.innerHTML = `<td contenteditable="true"></td><td contenteditable="true"></td>`; tbody.appendChild(row); }
     function addShape(type) {
         let obj;
         if(type==='line') obj=new fabric.Line([0,0,150,0], baseStyle);
@@ -254,28 +293,6 @@
         else if(type==='frame') obj=new fabric.Group([new fabric.Line([0,22,15,22],baseStyle), new fabric.Line([15,22,25,10],baseStyle), new fabric.Line([15,22,25,35],baseStyle), new fabric.Line([25,10,125,10],baseStyle), new fabric.Line([25,35,125,35],baseStyle)], {strokeUniform:true});
         else if(type==='angled') obj=new fabric.Group([new fabric.Line([50,0,50,30], baseStyle), new fabric.Line([50,30,20,60], baseStyle), new fabric.Line([50,30,80,60], baseStyle)], {strokeUniform: true});
         canvas.add(obj.set({left: 100, top: 100})).setActiveObject(obj).renderAll();
-    }
-
-    function makeBank() { const bank = document.getElementById('word-bank'); const val = document.getElementById('passIn').value.trim(); bank.innerHTML = ''; if(!val) return; val.split(/\s+/).forEach(t => { const s = document.createElement('span'); s.className = 'word'; s.textContent = t; s.draggable = true; s.ondragstart = (e) => e.dataTransfer.setData('text', t); bank.appendChild(s); }); syncWordBank(); }
-    canvas.on('drop', opt => { const txt = opt.e.dataTransfer.getData('text'); canvas.add(new fabric.IText(txt, { left: canvas.getPointer(opt.e).x, top: canvas.getPointer(opt.e).y, fontSize: 22, fontFamily: 'Times New Roman' })); });
-    
-    function saveAs() { const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([JSON.stringify(canvas.toJSON())], {type: "application/json"})); link.download = "Syntaxis_Project.json"; link.click(); }
-    function loadCanvas(e) { const reader = new FileReader(); reader.onload = (f) => { canvas.loadFromJSON(f.target.result, () => { canvas.renderAll(); syncWordBank(); }); }; reader.readAsText(e.target.files[0]); }
-    
-    function switchTab(e, id) { 
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); 
-        document.querySelectorAll('.tab-link').forEach(l => l.classList.remove('active')); 
-        document.getElementById(id).classList.add('active'); 
-        e.currentTarget.classList.add('active'); 
-    }
-    
-    function openTerry() { window.open('https://bterry.com/tc2/', '_blank'); }
-    
-    function addVariantRow() {
-        const tbody = document.querySelector('#variant-table tbody');
-        const row = document.createElement('tr');
-        row.innerHTML = `<td contenteditable="true" style="min-width:100px;"></td><td contenteditable="true"></td>`;
-        tbody.appendChild(row);
     }
 </script>
 </body>
