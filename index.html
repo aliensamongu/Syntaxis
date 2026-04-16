@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Σyntaxis | The Exegetical Toolbox</title>
+    <title>Σyntaxis | The Complete Exegetical Workspace</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
     <style>
         :root { --accent: #3498db; --red: #e74c3c; --dark: #000; --gold: #d4c8aa; --maroon: #800000; }
@@ -17,7 +17,6 @@
         .word { cursor: pointer; font-size: 14pt; color: white; padding: 2px 6px; user-select: none; transition: all 0.2s; border-radius: 3px; border: 1px solid transparent; }
         .word:hover { background: rgba(255,255,255,0.1); }
         .word.selected { background: var(--gold); color: var(--dark); font-weight: bold; border-color: white; }
-        .word.used { text-decoration: line-through; opacity: 0.3; color: #7f8c8d; cursor: default; pointer-events: none; }
 
         #main-container { display: flex; flex: 1; overflow: hidden; position: relative; }
         #left-bar { width: 140px; background: #f0f0f0; border-right: 2px solid #7f8c8d; display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 60px; gap: 8px; padding: 10px; z-index: 50; }
@@ -26,22 +25,35 @@
 
         #canvas-wrapper { flex: 1; position: relative; background: #f4ecd8; overflow: auto; }
         
-        #right-bar { width: 380px; background: #fdfdfd; border-left: 2px solid #7f8c8d; display: flex; flex-direction: column; z-index: 50; transition: margin-right 0.3s ease; position: relative; }
-        #right-bar.collapsed { margin-right: -380px; }
+        #right-bar { width: 480px; background: #fdfdfd; border-left: 2px solid #7f8c8d; display: flex; flex-direction: column; z-index: 50; transition: margin-right 0.3s ease; position: relative; }
+        #right-bar.collapsed { margin-right: -480px; }
         #collapse-btn { position: absolute; left: -25px; top: 50%; transform: translateY(-50%); width: 25px; height: 60px; background: #7f8c8d; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 5px 0 0 5px; z-index: 60; }
 
-        .tab-link { flex: 1; padding: 12px 5px; text-align: center; cursor: pointer; font-size: 12pt; font-weight: bold; color: #666; background: #d4d4d4; }
-        .tab-link.active { background: white; color: var(--maroon); border-bottom: 2px solid white; }
-        .tab-content { display: none; padding: 15px; flex: 1; overflow-y: auto; }
+        .tab-link { flex: 1; padding: 12px 5px; text-align: center; cursor: pointer; font-size: 11pt; font-weight: bold; color: #666; background: #d4d4d4; border-bottom: 1px solid #ccc; }
+        .tab-link.active { background: white; color: var(--maroon); border-bottom: 2px solid var(--maroon); }
+        .tab-content { display: none; padding: 10px; flex: 1; overflow-y: auto; }
         .tab-content.active { display: block; }
         
-        .ms-table { width: 100%; border-collapse: collapse; font-size: 14pt; background: white; margin-bottom: 25px; }
-        .ms-table th { background: #eee; padding: 10px; border: 1px solid #ddd; text-align: left; }
-        .ms-table td { padding: 10px; border: 1px solid #eee; vertical-align: top; }
-        .ms-group-header { background: #f9f2e0; font-weight: bold; padding: 12px; margin: 15px 0 8px 0; border-left: 6px solid var(--gold); font-size: 15pt; color: var(--maroon); }
+        .ms-table { width: 100%; border-collapse: collapse; font-size: 9pt; background: white; margin-bottom: 10px; }
+        .ms-table th { background: #eee; padding: 6px; border: 1px solid #ddd; text-align: left; position: sticky; top: 0; z-index: 10; }
+        .ms-table td { padding: 6px; border: 1px solid #eee; vertical-align: top; }
+        
+        .ms-section-toggle { background: #f9f2e0; font-weight: bold; padding: 10px; margin: 5px 0; border-left: 5px solid var(--gold); cursor: pointer; display: flex; justify-content: space-between; color: var(--maroon); }
+        .ms-section-content { display: none; margin-bottom: 15px; }
+        .ms-section-content.open { display: block; }
+
+        #context-menu { position: absolute; background: white; border: 1px solid #ccc; box-shadow: 2px 2px 10px rgba(0,0,0,0.2); display: none; z-index: 1000; padding: 5px 0; border-radius: 4px; width: 150px; }
+        .menu-item { padding: 8px 15px; cursor: pointer; font-family: sans-serif; font-size: 14px; color: #333; }
+        .menu-item:hover { background: var(--accent); color: white; }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
+
+<div id="context-menu">
+    <div class="menu-item" onclick="setStroke('solid')">Solid Line</div>
+    <div class="menu-item" onclick="setStroke('dashed')">Dashed Line</div>
+    <div class="menu-item" onclick="setStroke('dotted')">Dotted Line</div>
+</div>
 
 <div id="app-root">
     <div id="top-panel">
@@ -67,8 +79,9 @@
             <div class="shape-btn" onclick="addShape('do')"><svg><line x1="5" y1="22" x2="40" y2="22" stroke="black" stroke-width="2"/><line x1="12" y1="10" x2="12" y2="22" stroke="black" stroke-width="2"/></svg></div>
             <div class="shape-btn" onclick="addShape('dblacc')"><svg><line x1="5" y1="22" x2="40" y2="22" stroke="black" stroke-width="2"/><line x1="12" y1="10" x2="12" y2="22" stroke="black" stroke-width="2"/><line x1="25" y1="10" x2="25" y2="22" stroke="black" stroke-width="2"/></svg></div>
             <div class="shape-btn" onclick="addShape('shelf')"><svg><polyline points="10,25 10,15 35,15 35,25" fill="none" stroke="black" stroke-width="2"/></svg></div>
-            <div class="shape-btn" onclick="addShape('smart-mod')"><svg><polyline points="15,10 15,35 40,35" fill="none" stroke="black" stroke-width="2" transform="skewX(-20)"/></svg></div>
             <div class="shape-btn" onclick="addShape('frame')"><svg><polyline points="5,22 15,22 25,10 40,10 M25,10 25,35 40,35" stroke="black" stroke-width="2" fill="none"/></svg></div>
+            <div class="shape-btn" onclick="addShape('stilt')" title="Substantival Stilt"><svg><line x1="5" y1="10" x2="40" y2="10" stroke="black" stroke-width="2"/><line x1="22" y1="10" x2="22" y2="28" stroke="black" stroke-width="2"/><line x1="22" y1="28" x2="12" y2="40" stroke="black" stroke-width="2"/><line x1="22" y1="28" x2="32" y2="40" stroke="black" stroke-width="2"/></svg></div>
+            <div class="shape-btn" onclick="addShape('smart-mod')" title="Smart Modifier"><svg><polyline points="15,10 15,35 40,35" fill="none" stroke="black" stroke-width="2" transform="skewX(-20)"/></svg></div>
         </div>
         
         <div id="canvas-wrapper"><canvas id="c"></canvas></div>
@@ -82,74 +95,89 @@
             </div>
             
             <div id="tab-app" class="tab-content active">
-                <table id="variant-table" class="ms-table">
-                    <thead><tr><th>Reading</th><th>Witnesses</th></tr></thead>
-                    <tbody><tr><td contenteditable="true"></td><td contenteditable="true"></td></tr></tbody>
+                <table id="variant-table" style="width:100%; border-collapse: collapse; font-size:13pt;">
+                    <thead><tr><th width="30%" style="background:#f0f0f0; border:1px solid #ccc; padding:8px;">Reading</th><th width="70%" style="background:#f0f0f0; border:1px solid #ccc; padding:8px;">Witnesses</th></tr></thead>
+                    <tbody><tr><td contenteditable="true" style="border:1px solid #eee; padding:8px;"></td><td contenteditable="true" style="border:1px solid #eee; padding:8px;"></td></tr></tbody>
                 </table>
-                <button onclick="addVariantRow()" style="width:100%; padding:10px;">+ Add Variant Row</button>
+                <button onclick="addVariantRow()" style="width:100%; padding:10px; margin-top:10px;">+ Add Variant Row</button>
             </div>
 
             <div id="tab-ms" class="tab-content">
-                <div class="ms-group-header">Greek Papyri</div>
-                <table class="ms-table">
-                    <thead><tr><th>Sym</th><th>Cent.</th><th>Kind</th></tr></thead>
-                    <tr><td>p1</td><td>III</td><td>Alex</td></tr>
-                    <tr><td>p45</td><td>III</td><td>Caes</td></tr>
-                    <tr><td>p46</td><td>c.200</td><td>Alex</td></tr>
-                </table>
-                <div class="ms-group-header">Uncials</div>
-                <table class="ms-table">
-                    <thead><tr><th>Sym</th><th>Name</th><th>Cent.</th></tr></thead>
-                    <tr><td>א (01)</td><td>Sinaiticus</td><td>IV</td></tr>
-                    <tr><td>B (03)</td><td>Vaticanus</td><td>IV</td></tr>
-                </table>
+                <div class="ms-section-toggle" onclick="toggleMsSection(this)">Papyri <span>▼</span></div>
+                <div class="ms-section-content open"><table class="ms-table"><thead><tr><th>Sym</th><th>Cent</th><th>Cont</th><th>Kind</th></tr></thead><tbody id="papyri-body"></tbody></table></div>
+
+                <div class="ms-section-toggle" onclick="toggleMsSection(this)">Uncials <span>▼</span></div>
+                <div class="ms-section-content"><table class="ms-table"><thead><tr><th>Sym</th><th>Name</th><th>Cent</th><th>Kind</th></tr></thead><tbody id="uncials-body"></tbody></table></div>
+
+                <div class="ms-section-toggle" onclick="toggleMsSection(this)">Minuscules <span>▼</span></div>
+                <div class="ms-section-content"><table class="ms-table"><thead><tr><th>Sym</th><th>Cent</th><th>Cont</th><th>Kind</th></tr></thead><tbody id="minuscules-body"></tbody></table></div>
+
+                <div class="ms-section-toggle" onclick="toggleMsSection(this)">Translations & Versions <span>▼</span></div>
+                <div class="ms-section-content"><table class="ms-table"><thead><tr><th>Sym</th><th>Name</th><th>Cent</th><th>Kind</th></tr></thead><tbody id="versions-body"></tbody></table></div>
             </div>
 
             <div id="tab-abbr" class="tab-content">
-                <div class="ms-group-header">Critical Marks</div>
                 <table class="ms-table">
-                    <tr><td><b>vid</b></td><td>apparently</td></tr>
-                    <tr><td><b>supp</b></td><td>supplied text</td></tr>
-                    <tr><td><b>*</b></td><td>original reading</td></tr>
+                    <thead><tr><th>Code</th><th>Definition</th></tr></thead>
+                    <tbody>
+                        <tr><td><b>g</b></td><td>Gospels</td></tr>
+                        <tr><td><b>a</b></td><td>Acts</td></tr>
+                        <tr><td><b>p</b></td><td>Paul's Letters</td></tr>
+                        <tr><td><b>o</b></td><td>Other Letters</td></tr>
+                        <tr><td><b>r</b></td><td>Revelation</td></tr>
+                    </tbody>
                 </table>
+                <p style="font-size: 9pt;">* Roman numerals denote century. * Asterisk (*) indicates mixed kind of text.</p>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    const canvas = new fabric.Canvas('c', { width: 3000, height: 3000, preserveObjectStacking: true });
+    const canvas = new fabric.Canvas('c', { width: 3000, height: 3000, preserveObjectStacking: true, fireRightClick: true, stopContextMenu: true });
     const lineStyle = { stroke: 'black', strokeWidth: 2, fill: 'transparent', strokeUniform: true, cornerColor: '#3498db', cornerSize: 10, transparentCorners: false };
     let _clipboard = null;
 
-    function syncWordBank() {
-        const wordsInBank = document.querySelectorAll('.word');
-        const canvasIndices = canvas.getObjects().filter(o => o.tokenIndex !== undefined).map(o => o.tokenIndex);
-        wordsInBank.forEach(wordSpan => {
-            const idx = parseInt(wordSpan.getAttribute('data-index'));
-            if (canvasIndices.includes(idx)) {
-                wordSpan.classList.add('used');
-                wordSpan.classList.remove('selected');
-                wordSpan.draggable = false;
-            } else {
-                wordSpan.classList.remove('used');
-                wordSpan.draggable = true;
-            }
-        });
-    }
-    canvas.on('object:added', syncWordBank);
-    canvas.on('object:removed', syncWordBank);
+    const dataset = {
+        p: [
+            {s:"p1", c:"III", t:"g", k:"Alex"}, {s:"p3", c:"VI/VII", t:"g", k:"Alex"}, {s:"p4", c:"III", t:"g", k:"Alex"}, {s:"p5", c:"III", t:"g", k:"Alex"}, {s:"p6", c:"IV", t:"g", k:"-"}, {s:"p8", c:"IV", t:"a", k:"Alex"}, {s:"p13", c:"III/IV", t:"p", k:"Alex"}, {s:"p16", c:"III/IV", t:"p", k:"Alex"}, {s:"p18", c:"III/IV", t:"r", k:"Alex"}, {s:"p15", c:"III", t:"p", k:"-"}, {s:"p21", c:"IV/V", t:"g", k:"-"}, {s:"p22", c:"III", t:"g", k:"Alex"}, {s:"p23", c:"early III", t:"o", k:"Alex"}, {s:"p24", c:"IV", t:"r", k:"Alex"}, {s:"p25", c:"late IV", t:"g", k:"Western"}, {s:"p27", c:"III", t:"p", k:"Alex"}, {s:"p30", c:"III", t:"p", k:"-"}, {s:"p37", c:"III/IV", t:"g", k:"Caes"}, {s:"p39", c:"III", t:"g", k:"Alex"}, {s:"p40", c:"III", t:"p", k:"Alex"}, {s:"p41", c:"VIII", t:"a", k:"Western"}, {s:"p43", c:"VII/VIII", t:"r", k:"-"}, {s:"p45", c:"III", t:"ga", k:"Caes"}, {s:"p46", c:"c.200", t:"p", k:"Alex"}, {s:"p47", c:"late III", t:"r", k:"Alex"}, {s:"p48", c:"late III", t:"a", k:"Western"}, {s:"p49", c:"late III", t:"p", k:"-"}, {s:"p50", c:"IV/V", t:"a", k:"Alex"}, {s:"p59", c:"VII", t:"g", k:"-"}, {s:"p64", c:"c.200", t:"g", k:"-"}, {s:"p66", c:"c.200", t:"g", k:"Alex"}, {s:"p72", c:"III/IV", t:"r/o", k:"Alex"}, {s:"p74", c:"VII", t:"ao", k:"-"}, {s:"p75", c:"III", t:"g", k:"Alex"}, {s:"p85", c:"IV/V", t:"r", k:"-"}
+        ],
+        u: [
+            {s:"א (01)", n:"Sinaiticus", c:"IV", k:"Alex"}, {s:"A (02)", n:"Alexandrinus", c:"V", k:"Byz(g)/Alex"}, {s:"B (03)", n:"Vaticanus", c:"IV", k:"Alex"}, {s:"C (04)", n:"Ephraemi Res.", c:"V", k:"Alex*"}, {s:"D (05)", n:"Bezae", c:"V/VI", k:"Western"}, {s:"D (06)", n:"Claromontanus", c:"VI", k:"Western"}, {s:"E (08)", n:"Laudianus", c:"VI", k:"Western"}, {s:"L (019)", n:"Regius", c:"VIII", k:"Alex"}, {s:"W (032)", n:"Freer", c:"V", k:"Mixed*"}, {s:"Z (035)", n:"Dublinensis", c:"VI", k:"Alex"}, {s:"048", n:"Codex 048", c:"V", k:"Alex"}, {s:"0171", n:"Codex 0171", c:"IV", k:"Western"}, {s:"0220", n:"Codex 0220", c:"III", k:"Alex"}, {s:"Δ (037)", n:"Sangallensis", c:"IX", k:"Alex"}, {s:"Θ (038)", n:"Koridethi", c:"IX", k:"Caes"}, {s:"Ξ (040)", n:"Zacynthius", c:"VIII", k:"Alex"}
+        ],
+        m: [
+            {s:"f1", c:"XII-XIV", t:"g", k:"Caes"}, {s:"f13", c:"XI-XIII", t:"g", k:"Caes"}, {s:"1", c:"XII", t:"r", k:"-"}, {s:"33", c:"IX", t:"gapo", k:"Alex"}, {s:"61", c:"XVI", t:"gapor", k:"Alex(r)"}, {s:"81", c:"XI", t:"apo", k:"Alex"}, {s:"88", c:"XII", t:"apor", k:"West(p)"}, {s:"157", c:"XII", t:"g", k:"Caes"}, {s:"565", c:"IX", t:"g", k:"Caes"}, {s:"579", c:"XIII", t:"g", k:"Alex"}, {s:"614", c:"XIII", t:"a", k:"Western"}, {s:"700", c:"XI", t:"g", k:"Caes"}, {s:"892", c:"IX", t:"g", k:"Alex"}, {s:"1175", c:"XI", t:"apo", k:"Alex"}, {s:"1241", c:"XII", t:"gapo", k:"Alex(g)"}, {s:"1739", c:"X", t:"a/po", k:"West/Alex"}, {s:"2053", c:"XIII", t:"r", k:"Alex"}, {s:"2495", c:"XIV/XV", t:"gapor", k:"Byz*"}, {s:"Maj", c:"-", t:"gapor", k:"Byzantine"}
+        ],
+        v: [
+            {s:"lat", n:"Old Latin", c:"IV-XIII", k:"Western"}, {s:"vg", n:"Vulgate", c:"IV/V", k:"Western"}, {s:"syr(s)", n:"Sinaitic Syr.", c:"IV", k:"Western*"}, {s:"syr(c)", n:"Curetonian", c:"IV", k:"Western*"}, {s:"syr(p)", n:"Peshitta", c:"V", k:"-"}, {s:"syr(h)", n:"Harclean", c:"VII", k:"-"}, {s:"syr(pal)", n:"Palestinian", c:"V", k:"Caesarean"}, {s:"cop(sa)", n:"Sahidic", c:"III", k:"Alex*"}, {s:"cop(bo)", n:"Bohairic", c:"IV", k:"Alex"}
+        ]
+    };
 
+    function populate() {
+        const tr = (data, id, keys) => {
+            const b = document.getElementById(id);
+            data.forEach(i => {
+                const r = document.createElement('tr');
+                keys.forEach(k => { const d = document.createElement('td'); d.innerText = i[k]||"-"; r.appendChild(d); });
+                b.appendChild(r);
+            });
+        };
+        tr(dataset.p, 'papyri-body', ['s','c','t','k']);
+        tr(dataset.u, 'uncials-body', ['s','n','c','k']);
+        tr(dataset.m, 'minuscules-body', ['s','c','t','k']);
+        tr(dataset.v, 'versions-body', ['s','n','c','k']);
+    }
+
+    // Keyboard Shortcuts Logic
     window.addEventListener('keydown', (e) => {
         if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName) || document.activeElement.isContentEditable) return;
         const activeObj = canvas.getActiveObject();
         const step = e.shiftKey ? 10 : 1;
 
-        if (e.key === "Delete" || e.key === "Backspace") {
+        if ((e.key === "Delete" || e.key === "Backspace")) {
             canvas.getActiveObjects().forEach(obj => canvas.remove(obj));
             canvas.discardActiveObject().renderAll();
         }
-
         if (activeObj && e.key.startsWith("Arrow")) {
             e.preventDefault();
             if (e.key === "ArrowUp") activeObj.top -= step;
@@ -158,22 +186,15 @@
             if (e.key === "ArrowRight") activeObj.left += step;
             activeObj.setCoords(); canvas.renderAll();
         }
-
         if (e.ctrlKey || e.metaKey) {
-            if (e.key === 'c') { canvas.getActiveObject()?.clone(cloned => { _clipboard = cloned; }); }
-            if (e.key === 'v') {
-                if (!_clipboard) return;
+            if (e.key === 'c') canvas.getActiveObject()?.clone(c => _clipboard = c);
+            if (e.key === 'v' && _clipboard) {
                 _clipboard.clone(cloned => {
                     canvas.discardActiveObject();
                     cloned.set({ left: cloned.left + 20, top: cloned.top + 20, evented: true });
-                    if (cloned.type === 'activeSelection') {
-                        cloned.canvas = canvas;
-                        cloned.forEachObject(obj => canvas.add(obj));
-                        cloned.setCoords();
-                    } else { canvas.add(cloned); }
-                    _clipboard.top += 20; _clipboard.left += 20;
-                    canvas.setActiveObject(cloned);
-                    canvas.requestRenderAll();
+                    if (cloned.type === 'activeSelection') { cloned.canvas = canvas; cloned.forEachObject(o => canvas.add(o)); cloned.setCoords(); }
+                    else canvas.add(cloned);
+                    canvas.setActiveObject(cloned); canvas.requestRenderAll();
                 });
             }
             if (e.key === 'g' && activeObj?.type === 'activeSelection') { e.preventDefault(); activeObj.toGroup(); canvas.requestRenderAll(); }
@@ -181,38 +202,41 @@
         }
     });
 
+    // Sidebar & UI Logic
+    function toggleMsSection(el) { el.nextElementSibling.classList.toggle('open'); el.querySelector('span').innerText = el.nextElementSibling.classList.contains('open') ? '▲' : '▼'; }
+    function toggleSidebar() { document.getElementById('right-bar').classList.toggle('collapsed'); document.getElementById('collapse-btn').innerText = document.getElementById('right-bar').classList.contains('collapsed') ? '◀' : '▶'; }
+    function switchTab(e, id) { document.querySelectorAll('.tab-content, .tab-link').forEach(x => x.classList.remove('active')); document.getElementById(id).classList.add('active'); e.currentTarget.classList.add('active'); }
+    function addVariantRow() { const r = document.querySelector('#variant-table tbody').insertRow(); r.innerHTML = `<td contenteditable="true" style="border:1px solid #eee; padding:8px;"></td><td contenteditable="true" style="border:1px solid #eee; padding:8px;"></td>`; }
+
+    // Word Bank Logic
     function makeBank() {
-        const bank = document.getElementById('word-bank');
-        const val = document.getElementById('passIn').value.trim();
-        bank.innerHTML = ''; if(!val) return;
-        val.split(/\s+/).forEach((t, i) => {
-            const s = document.createElement('span');
-            s.className = 'word'; s.textContent = t; s.setAttribute('data-index', i);
-            s.draggable = true;
+        const bank = document.getElementById('word-bank'); bank.innerHTML = '';
+        document.getElementById('passIn').value.trim().split(/\s+/).forEach((t, i) => {
+            if(!t) return;
+            const s = document.createElement('span'); s.className = 'word'; s.textContent = t; s.draggable = true;
+            s.id = 'word-' + i; // Unique ID for tracking
             s.onclick = () => s.classList.toggle('selected');
             s.ondragstart = (e) => {
-                const selected = document.querySelectorAll('.word.selected');
-                const data = selected.length > 0 ? 
-                    Array.from(selected).map(w => ({text: w.textContent, idx: parseInt(w.getAttribute('data-index'))})) : 
-                    [{text: t, idx: i}];
+                const sel = document.querySelectorAll('.word.selected');
+                const data = sel.length > 0 
+                    ? Array.from(sel).map(w => ({text: w.textContent, id: w.id})) 
+                    : [{text: t, id: s.id}];
                 e.dataTransfer.setData('text/plain', JSON.stringify(data));
             };
             bank.appendChild(s);
         });
-        syncWordBank();
     }
 
     canvas.on('drop', opt => {
-        const raw = opt.e.dataTransfer.getData('text/plain'); if(!raw) return;
         try {
-            const words = JSON.parse(raw);
+            const words = JSON.parse(opt.e.dataTransfer.getData('text/plain'));
             const ptr = canvas.getPointer(opt.e);
             words.forEach((item, i) => {
-                const it = new fabric.IText(item.text, { left: ptr.x + (i*15), top: ptr.y + (i*15), fontSize: 24, fontFamily: 'Times New Roman' });
-                it.tokenIndex = item.idx;
-                canvas.add(it);
+                canvas.add(new fabric.IText(item.text, { left: ptr.x + (i*15), top: ptr.y + (i*15), fontSize: 24, fontFamily: 'Times New Roman' }));
+                // Remove the word from the bank upon successful drop
+                const el = document.getElementById(item.id);
+                if(el) el.remove();
             });
-            document.querySelectorAll('.word.selected').forEach(w => w.classList.remove('selected'));
         } catch(e) {}
     });
 
@@ -223,13 +247,10 @@
         else if(type==='do') obj = new fabric.Group([new fabric.Line([0,20,150,20], lineStyle), new fabric.Line([40,5,40,20], lineStyle)], {strokeUniform:true});
         else if(type==='dblacc') obj = new fabric.Group([new fabric.Line([0,20,180,20], lineStyle), new fabric.Line([50,5,50,20], lineStyle), new fabric.Line([110,5,110,20], lineStyle)], {strokeUniform:true});
         else if(type==='frame') obj = new fabric.Group([new fabric.Line([0,22,15,22],lineStyle), new fabric.Line([15,22,25,10],lineStyle), new fabric.Line([15,22,25,35],lineStyle), new fabric.Line([25,10,125,10],lineStyle), new fabric.Line([25,35,125,35],lineStyle)], {strokeUniform:true});
-        else if(type==='shelf' || type==='smart-mod') {
-            const pts = (type==='shelf') ? [{x:0,y:40},{x:0,y:0},{x:100,y:0},{x:100,y:40}] : [{x:30,y:0},{x:0,y:60},{x:120,y:60}];
-            createSmartPoly(pts, 300, 300);
-            return;
-        }
-        obj.set({ left: 300, top: 300 });
-        canvas.add(obj); canvas.setActiveObject(obj); canvas.renderAll();
+        else if(type==='stilt') obj = new fabric.Group([new fabric.Line([0, 10, 150, 10], lineStyle), new fabric.Line([75, 10, 75, 60], lineStyle), new fabric.Line([75, 60, 45, 100], lineStyle), new fabric.Line([75, 60, 105, 100], lineStyle)], { strokeUniform: true });
+        else if(type==='shelf') { createSmartPoly([{x:0,y:40},{x:0,y:0},{x:100,y:0},{x:100,y:40}], 300, 300); return; }
+        else if(type==='smart-mod') { createSmartPoly([{x:30,y:0},{x:0,y:60},{x:120,y:60}], 300, 300); return; }
+        obj.set({ left: 300, top: 300 }); canvas.add(obj); canvas.setActiveObject(obj); canvas.renderAll();
     }
 
     function createSmartPoly(points, left, top) {
@@ -243,52 +264,18 @@
                     polygon.points[index] = { x: mouseLocal.x + polygon.pathOffset.x, y: mouseLocal.y + polygon.pathOffset.y };
                     return true;
                 },
-                cursorStyle: 'crosshair',
-                render: (ctx, l, t) => { ctx.save(); ctx.fillStyle = '#3498db'; ctx.beginPath(); ctx.arc(l, t, 6, 0, 2*Math.PI); ctx.fill(); ctx.restore(); }
+                cursorStyle: 'crosshair', render: (ctx, l, t) => { ctx.save(); ctx.fillStyle = '#3498db'; ctx.beginPath(); ctx.arc(l, t, 6, 0, 2*Math.PI); ctx.fill(); ctx.restore(); }
             });
             return acc;
         }, {});
         canvas.add(poly); canvas.setActiveObject(poly); canvas.renderAll();
     }
 
-    function saveAs() {
-        const appRows = Array.from(document.querySelectorAll('#variant-table tbody tr')).map(tr => ({ reading: tr.cells[0].innerText, witnesses: tr.cells[1].innerText }));
-        const data = { canvas: canvas.toJSON(['tokenIndex', 'points']), verse: document.getElementById('passIn').value, apparatus: appRows };
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(new Blob([JSON.stringify(data)], {type: "application/json"}));
-        link.download = "syntaxis_project.json"; link.click();
-    }
-
-    function loadProject(e) {
-        const file = e.target.files[0]; if(!file) return;
-        const reader = new FileReader();
-        reader.onload = (f) => {
-            const data = JSON.parse(f.target.result);
-            document.getElementById('passIn').value = data.verse || "";
-            makeBank();
-            canvas.loadFromJSON(data.canvas, () => {
-                canvas.getObjects().forEach(obj => { if(obj.type === 'polyline') createSmartPoly(obj.points, obj.left, obj.top); });
-                canvas.renderAll(); syncWordBank();
-            });
-            if(data.apparatus) {
-                const tbody = document.querySelector('#variant-table tbody'); tbody.innerHTML = "";
-                data.apparatus.forEach(row => {
-                    const tr = tbody.insertRow();
-                    tr.innerHTML = `<td contenteditable="true">${row.reading}</td><td contenteditable="true">${row.witnesses}</td>`;
-                });
-            }
-        };
-        reader.readAsText(file);
-    }
-
-    function toggleSidebar() { document.getElementById('right-bar').classList.toggle('collapsed'); }
-    function switchTab(e, id) {
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        document.querySelectorAll('.tab-link').forEach(l => l.classList.remove('active'));
-        document.getElementById(id).classList.add('active'); e.currentTarget.classList.add('active');
-    }
-    function addVariantRow() { const row = document.querySelector('#variant-table tbody').insertRow(); row.innerHTML = `<td contenteditable="true"></td><td contenteditable="true"></td>`; }
+    canvas.on('mouse:down', (opt) => { if (opt.button === 3 && opt.target && opt.target.type !== 'i-text') { const m = document.getElementById('context-menu'); m.style.display = 'block'; m.style.left = opt.e.clientX + 'px'; m.style.top = opt.e.clientY + 'px'; } else document.getElementById('context-menu').style.display = 'none'; });
+    function setStroke(style) { const obj = canvas.getActiveObject(); if (!obj) return; const dashMap = { 'solid': null, 'dashed': [10, 5], 'dotted': [2, 4] }; if (obj.type === 'group') obj.getObjects().forEach(o => o.set('strokeDashArray', dashMap[style])); else obj.set('strokeDashArray', dashMap[style]); canvas.renderAll(); document.getElementById('context-menu').style.display = 'none'; }
     function addElliptical() { const t = prompt("Word:"); if(t) canvas.add(new fabric.IText(`(${t})`, { left: 300, top: 300, fontSize: 24, fontStyle: 'italic', opacity: 0.6 })); }
+
+    window.onload = populate;
 </script>
 </body>
 </html>
