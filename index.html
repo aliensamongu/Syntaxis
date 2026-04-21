@@ -2,280 +2,424 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Σyntaxis | The Exegetical Toolkit</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <title>Σyntaxis Pro | Master Editor</title>
     <style>
-        :root { --accent: #3498db; --red: #e74c3c; --dark: #000; --gold: #d4c8aa; --maroon: #800000; }
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #95a5a6; font-family: 'Times New Roman', serif; }
-        #app-root { display: flex; flex-direction: column; height: 100vh; }
-        
-        #top-panel { height: 180px; background: var(--dark); color: white; padding: 15px 20px; flex-shrink: 0; display: flex; flex-direction: column; box-sizing: border-box; z-index: 100; border-bottom: 2px solid var(--gold); }
-        .input-row { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
-        .input-field { padding: 8px; font-size: 14px; border-radius: 4px; border: none; background: #fff; color: #333; }
-        
-        #word-bank { flex: 1; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 0; align-content: flex-start; }
-        .word { cursor: pointer; font-size: 14pt; color: white; padding: 2px 6px; user-select: none; transition: all 0.2s; border-radius: 3px; border: 1px solid transparent; }
-        .word:hover { background: rgba(255,255,255,0.1); }
-        .word.selected { background: var(--gold); color: var(--dark); font-weight: bold; border-color: white; }
+        :root {
+            --sidebar-width: 380px;
+            --accent-bg: #fdfdfd;
+            --bg-main: #f0f3f5;
+            --text-primary: #2c3e50;
+            --text-secondary: #7f8c8d;
+            --border-color: #e6e9eb;
+            --blue: #3498db;
+            --green: #2ecc71;
+            --orange: #f39c12;
+            --red: #e74c3c;
+            --shadow-subtle: 0 4px 6px rgba(0,0,0,0.05);
+            --shadow-medium: 0 10px 15px rgba(0,0,0,0.08);
+            --radius-small: 8px;
+            --radius-medium: 12px;
+        }
 
-        #main-container { display: flex; flex: 1; overflow: hidden; position: relative; }
-        #left-bar { width: 140px; background: #f0f0f0; border-right: 2px solid #7f8c8d; display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 60px; gap: 8px; padding: 10px; z-index: 50; }
-        .shape-btn { background: white; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .shape-btn svg { width: 45px; height: 45px; pointer-events: none; }
-
-        #canvas-wrapper { flex: 1; position: relative; background: #f4ecd8; overflow: auto; }
+        body {
+            margin: 0; display: flex; height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden; background: var(--bg-main); color: var(--text-primary);
+        }
         
-        #right-bar { width: 480px; background: #fdfdfd; border-left: 2px solid #7f8c8d; display: flex; flex-direction: column; z-index: 50; transition: margin-right 0.3s ease; position: relative; }
-        #right-bar.collapsed { margin-right: -480px; }
-        #collapse-btn { position: absolute; left: -25px; top: 50%; transform: translateY(-50%); width: 25px; height: 60px; background: #7f8c8d; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 5px 0 0 5px; z-index: 60; }
-
-        .tab-link { flex: 1; padding: 12px 5px; text-align: center; cursor: pointer; font-size: 11pt; font-weight: bold; color: #666; background: #d4d4d4; border-bottom: 1px solid #ccc; }
-        .tab-link.active { background: white; color: var(--maroon); border-bottom: 2px solid var(--maroon); }
-        .tab-content { display: none; padding: 10px; flex: 1; overflow-y: auto; }
-        .tab-content.active { display: block; }
+        #sidebar {
+            width: var(--sidebar-width); background: var(--accent-bg);
+            border-right: 1px solid var(--border-color); display: flex; flex-direction: column;
+            z-index: 100; box-shadow: 10px 0 30px rgba(0,0,0,0.04);
+        }
+        .sidebar-inner { padding: 30px; display: flex; flex-direction: column; flex-grow: 1; overflow-y: auto; }
         
-        .ms-table { width: 100%; border-collapse: collapse; font-size: 9pt; background: white; margin-bottom: 10px; }
-        .ms-table th { background: #eee; padding: 6px; border: 1px solid #ddd; text-align: left; position: sticky; top: 0; z-index: 10; }
-        .ms-table td { padding: 6px; border: 1px solid #eee; vertical-align: top; }
+        h2 { margin: 0; color: var(--text-primary); font-family: Georgia, serif; font-size: 26px; }
+        .ix { font-size: 16px; text-decoration: overline; margin-left: 6px; font-weight: bold; }
         
-        .ms-section-toggle { background: #f9f2e0; font-weight: bold; padding: 10px; margin: 5px 0; border-left: 5px solid var(--gold); cursor: pointer; display: flex; justify-content: space-between; color: var(--maroon); }
-        .ms-section-content { display: none; margin-bottom: 15px; }
-        .ms-section-content.open { display: block; }
+        input[type="text"], textarea {
+            width: 100%; box-sizing: border-box; border-radius: var(--radius-small);
+            border: 1px solid var(--border-color); padding: 12px;
+            font-family: inherit; font-size: 13px; color: var(--text-primary);
+            transition: border-color 0.15s; outline: none;
+        }
+        input[type="text"]:focus, textarea:focus { border-color: var(--blue); }
+        textarea { height: 100px; margin-top: 15px; resize: none; line-height: 1.5; }
+        
+        #word-bank {
+            height: 140px; margin-top: 15px; overflow-y: auto; padding: 15px;
+            display: flex; flex-wrap: wrap; align-content: flex-start; gap: 10px;
+            background: #fafafa; border-radius: var(--radius-medium);
+            border: 1px solid var(--border-color); box-shadow: inset 0 2px 5px rgba(0,0,0,0.02);
+        }
+        .bank-word {
+            font-family: Georgia, serif; font-size: 19px; font-style: italic;
+            cursor: grab; padding: 6px 12px; user-select: none;
+            border-radius: var(--radius-small); background: #fff;
+            border: 1px solid var(--border-color); transition: 0.15s;
+        }
+        .bank-word:hover { box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
+        .bank-word.selected { background: var(--blue); color: white; border-color: var(--blue); }
+        
+        .palette { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 25px; }
+        .tool {
+            padding: 12px; border: 1px solid var(--border-color); border-radius: var(--radius-medium);
+            text-align: center; background: #fff; cursor: pointer;
+            font-size: 11px; font-weight: bold; transition: 0.15s; line-height: 1.3;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+        }
+        .tool:hover { border-color: #bdc3c7; box-shadow: 0 6px 12px rgba(0,0,0,0.06); }
+        .tool svg { width: 32px; height: 32px; stroke: #444; fill: none; stroke-width: 3.5; display: block; margin: 0 auto 8px; }
+        
+        .std-btn {
+            border: none; padding: 12px; border-radius: var(--radius-small);
+            cursor: pointer; font-weight: bold; font-size: 12px; text-transform: uppercase;
+            letter-spacing: 0.5px; transition: 0.15s;
+        }
+        
+        #canvas-viewport { flex-grow: 1; overflow: auto; position: relative; }
+        canvas { background: #fff; display: block; box-shadow: var(--shadow-medium); margin: 60px; cursor: crosshair; }
+        
+        .hint-overlay {
+            position: fixed; bottom: 30px; right: 30px;
+            background: rgba(255,255,255,0.95); padding: 15px;
+            border-radius: var(--radius-medium); font-size: 12px; color: var(--text-secondary);
+            border: 1px solid var(--border-color); pointer-events: none;
+            line-height: 1.6; z-index: 1000; box-shadow: var(--shadow-medium);
+            backdrop-filter: blur(5px);
+        }
+        
+        #apparatus-drawer {
+            position: fixed; top: 0; right: -420px; width: 380px; height: 100vh;
+            background: var(--accent-bg); box-shadow: -10px 0 30px rgba(0,0,0,0.1);
+            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2000; display: flex; flex-direction: column;
+            border-left: 1px solid var(--border-color);
+        }
+        #apparatus-drawer.open { right: 0; }
+        .apparatus-header { padding: 30px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: #fdfdfd; }
+        .apparatus-header h3 { margin: 0; color: var(--text-primary); font-family: Georgia, serif; font-size: 22px; }
+        .close-btn { background: none; border: none; font-size: 30px; cursor: pointer; color: #b0b0b0; }
+        
+        .ms-card {
+            border: 1px solid var(--border-color); border-radius: var(--radius-small);
+            padding: 18px; margin-bottom: 18px; background: #fff; position: relative;
+            box-shadow: var(--shadow-subtle);
+        }
+        
+        /* NEW: Context Menu Design */
+        #context-menu {
+            position: fixed; display: none; background: #fff; border: 1px solid var(--border-color);
+            border-radius: var(--radius-small); box-shadow: var(--shadow-medium);
+            z-index: 5000; padding: 5px 0; min-width: 160px;
+        }
+        .context-item {
+            padding: 10px 20px; font-size: 13px; cursor: pointer; color: var(--text-primary);
+            transition: background 0.1s; border-bottom: 1px solid #f9f9f9;
+        }
+        .context-item:last-child { border-bottom: none; }
+        .context-item:hover { background: var(--bg-main); color: var(--blue); }
+        .context-header { padding: 8px 20px; font-size: 10px; font-weight: bold; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
 
-        #context-menu { position: absolute; background: white; border: 1px solid #ccc; box-shadow: 2px 2px 10px rgba(0,0,0,0.2); display: none; z-index: 1000; padding: 5px 0; border-radius: 4px; width: 150px; }
-        .menu-item { padding: 8px 15px; cursor: pointer; font-family: sans-serif; font-size: 14px; color: #333; }
-        .menu-item:hover { background: var(--accent); color: white; }
+        #variant-modal {
+            display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.98); z-index: 3000; padding: 30px;
+            flex-direction: column; gap: 15px;
+        }
+        #variant-modal.active { display: flex; }
+        
+        .proj-card {
+            display:flex; justify-content:space-between; align-items:center;
+            background:#fff; padding:12px 15px; border:1px solid var(--border-color);
+            border-radius:var(--radius-small); cursor:pointer; transition:0.15s;
+        }
+        .proj-card:hover { border-color: var(--blue); }
+        
+        .floating-card {
+            background: #fff; padding: 10px; border-radius: var(--radius-medium);
+            border: 1px solid var(--border-color); box-shadow: var(--shadow-subtle);
+        }
     </style>
 </head>
-<body oncontextmenu="return false;">
+<body>
 
-<div id="context-menu">
-    <div class="menu-item" onclick="setStroke('solid')">Solid Line</div>
-    <div class="menu-item" onclick="setStroke('dashed')">Dashed Line</div>
-    <div class="menu-item" onclick="setStroke('dotted')">Dotted Line</div>
+<div id="sidebar">
+    <div class="sidebar-inner">
+        <h2>Σyntaxis<span class="ix">IX</span></h2>
+        
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px; margin-bottom: 20px;">
+            <input type="text" id="projectName" placeholder="Diagram Name" oninput="autoSave()">
+            <div style="display: flex; gap: 8px;">
+                <input type="text" id="verseReference" placeholder="Ref (e.g. Col 1)" oninput="autoSave()" style="flex:1;">
+                <button class="std-btn" onclick="saveToApp()" style="background:var(--orange); color:white; flex-shrink:0;">Save App</button>
+            </div>
+        </div>
+
+        <textarea id="passageInput" placeholder="Paste passage here..." oninput="updateWordBank(); autoSave();"></textarea>
+        <div id="word-bank"></div>
+        
+        <div class="palette">
+            <div class="tool" onclick="addShape('subject_baseline')"><svg viewBox="0 0 100 100"><line x1="10" y1="50" x2="90" y2="50"/><line x1="50" y1="35" x2="50" y2="65"/></svg>Subject</div>
+            <div class="tool" onclick="addShape('direct_object')"><svg viewBox="0 0 100 100"><polyline points="30,20 30,70 80,70"/></svg>Direct Obj.</div>
+            <div class="tool" onclick="addShape('modifier')"><svg viewBox="0 0 100 100"><polyline points="30,20 50,70 95,70"/></svg>Modifier</div>
+            <div class="tool" onclick="addShape('appositive')"><svg viewBox="0 0 100 100"><polyline points="30,20 30,70 80,70"/></svg>Appositive</div>
+            <div class="tool" onclick="addShape('x_line')"><svg viewBox="0 0 100 100"><line x1="30" y1="30" x2="70" y2="70"/><line x1="70" y1="30" x2="30" y2="70"/></svg>Understood (X)</div>
+            <div class="tool" onclick="addShape('diamond')"><svg viewBox="0 0 100 100"><path d="M5,50 L25,50 L45,20 L75,20 L95,50 L75,80 L45,80 L25,50 M45,20 L45,80 M75,20 L75,80"/></svg>Compound</div>
+            <div class="tool" onclick="addShape('stilt')"><svg viewBox="0 0 100 100"><line x1="10" y1="30" x2="90" y2="30"/><line x1="50" y1="30" x2="50" y2="60"/><path d="M30,90 L50,60 L70,90"/></svg>Platform Stilt</div>
+            <div class="tool" onclick="addShape('fork')"><svg viewBox="0 0 100 100"><path d="M10,50 L30,50 L50,20 L90,20 M30,50 L50,80 L90,80 M50,20 L50,80"/></svg>Fork (Split)</div>
+            <div class="tool" onclick="addPrepShelf()"><svg viewBox="0 0 100 100"><polyline points="60,20 20,80 80,80"/></svg>Prep Shelf</div>
+            
+            <div class="tool" onclick="addShape('single_line')"><svg viewBox="0 0 100 100"><line x1="20" y1="80" x2="80" y2="20"/></svg>Single Line</div>
+            <div class="tool" onclick="addShape('text')"><strong style="font-size:20px;">Label</strong></div>
+            <button class="std-btn" onclick="flipSelected()" style="background:#fff; color:var(--text-primary); border:1px solid var(--border-color); grid-column: span 1; box-shadow: 0 2px 4px rgba(0,0,0,0.03);">Flip (F)</button>
+            
+            <button class="std-btn" onclick="elements=[]; selectedElements=[]; draw(); autoSave();" style="background:var(--red); color:white; grid-column: span 3; margin-top:10px;">Clear Canvas</button>
+
+            <div class="palette floating-card" style="margin-top: 15px; grid-column: span 3; align-items: center; justify-content: space-between; gap: 8px;">
+                <button id="snapToggle" onclick="toggleSnap()" title="Toggle Grid Snap" style="cursor:pointer; padding:5px 8px; border:1px solid var(--border-color); border-radius:var(--radius-small); background:#a9dfbf; font-weight:bold; font-size:16px;">🧲</button>
+                <input type="color" id="styleColor" value="#333333" title="Color" onchange="applyStyle('color', this.value)" style="width:30px; height:30px; cursor:pointer; padding:0; border:none; background:transparent;">
+                <input type="number" id="styleWeight" value="2.5" step="0.5" min="1" max="10" title="Weight" onchange="applyStyle('thickness', parseFloat(this.value))" style="width: 50px; height:30px; border:1px solid var(--border-color); border-radius:var(--radius-small);">
+                <button onclick="applyStyle('bold', true)" title="Bold" style="cursor:pointer; font-weight:bold; font-family:serif; font-style:italic; font-size:15px; padding:4px 10px; border:1px solid var(--border-color); border-radius:var(--radius-small); background:#fff;">B</button>
+                <button onclick="toggleApparatus()" title="Critical Apparatus" style="cursor:pointer; padding:5px 10px; border:1px solid var(--border-color); border-radius:var(--radius-small); background:#fff; font-weight:bold; color:var(--text-primary); font-size:13px;">📜 Text</button>
+                <button onclick="setZoom(-0.1)" title="Zoom Out" style="cursor:pointer; padding:4px 8px; border:1px solid var(--border-color); border-radius:var(--radius-small); background:#fff; font-size:16px;">-</button>
+                <button onclick="setZoom(0.1)" title="Zoom In" style="cursor:pointer; padding:4px 8px; border:1px solid var(--border-color); border-radius:var(--radius-small); background:#fff; font-size:16px;">+</button>
+            </div>
+
+            <div class="floating-card" style="display: flex; gap: 8px; margin-top: 10px; grid-column: span 3; padding: 10px;">
+                <button class="std-btn" onclick="exportImage()" style="flex:1; background:var(--green); color:white; font-size:11px;">PNG</button>
+                <button class="std-btn" onclick="saveProject()" style="flex:1; background:var(--blue); color:white; font-size:11px;">Save</button>
+                <button class="std-btn" onclick="triggerLoad()" style="flex:1; background:#9b59b6; color:white; font-size:11px;">Load</button>
+                <input type="file" id="fileInput" style="display:none;" onchange="fallbackLoad(event)">
+            </div>
+        </div>
+        
+        <div style="margin-top: 25px; border-top: 1px solid var(--border-color); padding-top: 25px;">
+            <h3 style="margin:0 0 10px 0; font-size:14px; color:var(--text-secondary); text-transform:uppercase; letter-spacing:1px; font-weight:bold;">Projects</h3>
+            <div id="project-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
+        </div>
+    </div>
 </div>
 
-<div id="app-root">
-    <div id="top-panel">
-        <div class="input-row">
-            <div style="display:flex; flex-direction:column; margin-right: 25px;">
-                <div style="font-size: 24pt; color: var(--gold); font-weight: bold;">&Sigma;yntaxis</div>
-                <div style="font-size: 10pt; color: white; font-style: italic; opacity: 0.8;">The Exegetical Toolbox</div>
-            </div>
-            <input type="text" id="passIn" placeholder="Paste Verse..." class="input-field" style="flex:1;" oninput="makeBank()">
-            <button onclick="addElliptical()" style="background:var(--accent); color:white; border:none; padding: 8px 12px; border-radius:4px; cursor:pointer;">(Ellipsis)</button>
-            <button onclick="window.open('https://bterry.com/tc/index.htm', '_blank')" style="background:var(--maroon); color:white; border:none; padding: 8px 12px; border-radius:4px; cursor:pointer;">Terry's TC</button>
-            <button onclick="saveAs()" style="background:#27ae60; color:white; border:none; padding: 8px 12px; border-radius:4px; cursor:pointer;">Save</button>
-            <button onclick="document.getElementById('loadInput').click()" style="background:#e67e22; color:white; border:none; padding: 8px 12px; border-radius:4px; cursor:pointer;">Load</button>
-            <input type="file" id="loadInput" style="display:none" accept=".json" onchange="loadProject(event)">
+<div id="context-menu">
+    <div class="context-header">Line Alignment</div>
+    <div class="context-item" onclick="snapLine('horizontal')">Snap Horizontal</div>
+    <div class="context-item" onclick="snapLine('vertical')">Snap Vertical</div>
+    <div class="context-header" style="margin-top:5px;">Line Style</div>
+    <div class="context-item" onclick="setLineStyle('solid')">Solid Line</div>
+    <div class="context-item" onclick="setLineStyle('dashed')">Dashed Line</div>
+    <div class="context-item" onclick="setLineStyle('dotted')">Dotted Line</div>
+</div>
+
+<div id="apparatus-drawer">
+    <div class="apparatus-header"><h3>Apparatus</h3><button class="close-btn" onclick="toggleApparatus()">&times;</button></div>
+    <div class="apparatus-content">
+        <div id="apparatus-list"></div>
+        <button onclick="openVariantModal()" style="width: 100%; margin-top: 10px; padding: 12px; background: #fafafa; border: 1px dashed #ccc; border-radius: 8px; cursor: pointer; color: #888; font-weight: bold;">+ Add Manuscript</button>
+        <button onclick="launchCNTR()" style="width: 100%; margin-top: 30px; padding: 12px; background: var(--text-primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Verify on CNTR ↗</button>
+        <div id="variant-modal">
+            <h4>Add MS</h4>
+            <input type="text" id="v-symbol" placeholder="Symbol">
+            <input type="text" id="v-date" placeholder="Date">
+            <textarea id="v-reading" placeholder="Reading..."></textarea>
+            <div style="display:flex; gap:10px;"><button class="std-btn" onclick="closeVariantModal()" style="flex:1; background:#eee;">Cancel</button><button class="std-btn" onclick="saveVariant()" style="flex:1; background:var(--blue); color:white;">Save</button></div>
         </div>
-        <div id="word-bank"></div>
     </div>
+</div>
 
-    <div id="main-container">
-        <div id="left-bar">
-            <div class="shape-btn" onclick="addShape('line')"><svg><line x1="5" y1="22" x2="40" y2="22" stroke="black" stroke-width="2"/></svg></div>
-            <div class="shape-btn" onclick="addShape('cross')"><svg><line x1="5" y1="22" x2="40" y2="22" stroke="black" stroke-width="2"/><line x1="22" y1="5" x2="22" y2="40" stroke="black" stroke-width="2"/></svg></div>
-            <div class="shape-btn" onclick="addShape('do')"><svg><line x1="5" y1="22" x2="40" y2="22" stroke="black" stroke-width="2"/><line x1="12" y1="10" x2="12" y2="22" stroke="black" stroke-width="2"/></svg></div>
-            <div class="shape-btn" onclick="addShape('dblacc')"><svg><line x1="5" y1="22" x2="40" y2="22" stroke="black" stroke-width="2"/><line x1="12" y1="10" x2="12" y2="22" stroke="black" stroke-width="2"/><line x1="25" y1="10" x2="25" y2="22" stroke="black" stroke-width="2"/></svg></div>
-            <div class="shape-btn" onclick="addShape('shelf')"><svg><polyline points="10,25 10,15 35,15 35,25" fill="none" stroke="black" stroke-width="2"/></svg></div>
-            <div class="shape-btn" onclick="addShape('frame')"><svg><polyline points="5,22 15,22 25,10 40,10 M25,10 25,35 40,35" stroke="black" stroke-width="2" fill="none"/></svg></div>
-            <div class="shape-btn" onclick="addShape('stilt')" title="Substantival Stilt"><svg><line x1="5" y1="10" x2="40" y2="10" stroke="black" stroke-width="2"/><line x1="22" y1="10" x2="22" y2="28" stroke="black" stroke-width="2"/><line x1="22" y1="28" x2="12" y2="40" stroke="black" stroke-width="2"/><line x1="22" y1="28" x2="32" y2="40" stroke="black" stroke-width="2"/></svg></div>
-            <div class="shape-btn" onclick="addShape('smart-mod')" title="Smart Modifier"><svg><polyline points="15,10 15,35 40,35" fill="none" stroke="black" stroke-width="2" transform="skewX(-20)"/></svg></div>
-        </div>
-        
-        <div id="canvas-wrapper"><canvas id="c"></canvas></div>
-        
-        <div id="right-bar">
-            <div id="collapse-btn" onclick="toggleSidebar()">▶</div>
-            <div style="display:flex;">
-                <div class="tab-link active" onclick="switchTab(event, 'tab-app')">Apparatus</div>
-                <div class="tab-link" onclick="switchTab(event, 'tab-ms')">Witnesses</div>
-                <div class="tab-link" onclick="switchTab(event, 'tab-abbr')">Abbr.</div>
-            </div>
-            
-            <div id="tab-app" class="tab-content active">
-                <table id="variant-table" style="width:100%; border-collapse: collapse; font-size:13pt;">
-                    <thead><tr><th width="30%" style="background:#f0f0f0; border:1px solid #ccc; padding:8px;">Reading</th><th width="70%" style="background:#f0f0f0; border:1px solid #ccc; padding:8px;">Witnesses</th></tr></thead>
-                    <tbody><tr><td contenteditable="true" style="border:1px solid #eee; padding:8px;"></td><td contenteditable="true" style="border:1px solid #eee; padding:8px;"></td></tr></tbody>
-                </table>
-                <button onclick="addVariantRow()" style="width:100%; padding:10px; margin-top:10px;">+ Add Variant Row</button>
-            </div>
-
-            <div id="tab-ms" class="tab-content">
-                <div class="ms-section-toggle" onclick="toggleMsSection(this)">Papyri <span>▼</span></div>
-                <div class="ms-section-content open"><table class="ms-table"><thead><tr><th>Sym</th><th>Cent</th><th>Cont</th><th>Kind</th></tr></thead><tbody id="papyri-body"></tbody></table></div>
-
-                <div class="ms-section-toggle" onclick="toggleMsSection(this)">Uncials <span>▼</span></div>
-                <div class="ms-section-content"><table class="ms-table"><thead><tr><th>Sym</th><th>Name</th><th>Cent</th><th>Kind</th></tr></thead><tbody id="uncials-body"></tbody></table></div>
-
-                <div class="ms-section-toggle" onclick="toggleMsSection(this)">Minuscules <span>▼</span></div>
-                <div class="ms-section-content"><table class="ms-table"><thead><tr><th>Sym</th><th>Cent</th><th>Cont</th><th>Kind</th></tr></thead><tbody id="minuscules-body"></tbody></table></div>
-
-                <div class="ms-section-toggle" onclick="toggleMsSection(this)">Translations & Versions <span>▼</span></div>
-                <div class="ms-section-content"><table class="ms-table"><thead><tr><th>Sym</th><th>Name</th><th>Cent</th><th>Kind</th></tr></thead><tbody id="versions-body"></tbody></table></div>
-            </div>
-
-            <div id="tab-abbr" class="tab-content">
-                <table class="ms-table">
-                    <thead><tr><th>Code</th><th>Definition</th></tr></thead>
-                    <tbody>
-                        <tr><td><b>g</b></td><td>Gospels</td></tr>
-                        <tr><td><b>a</b></td><td>Acts</td></tr>
-                        <tr><td><b>p</b></td><td>Paul's Letters</td></tr>
-                        <tr><td><b>o</b></td><td>Other Letters</td></tr>
-                        <tr><td><b>r</b></td><td>Revelation</td></tr>
-                    </tbody>
-                </table>
-                <p style="font-size: 12pt;">* Roman numerals denote century. * Asterisk (*) indicates mixed kind of text.</p>
-            </div>
-        </div>
+<div id="canvas-viewport">
+    <canvas id="mainCanvas"></canvas>
+    <div class="hint-overlay">
+        Pro Scaling Mode | Right-Click <b>Line</b> for style & snap options.<br>
+        Shift+Arrows to Sprint | F to Flip | Group (G) to lock syntax trees.
     </div>
 </div>
 
 <script>
-    const canvas = new fabric.Canvas('c', { width: 3000, height: 3000, preserveObjectStacking: true, fireRightClick: true, stopContextMenu: true });
-    const lineStyle = { stroke: 'black', strokeWidth: 2, fill: 'transparent', strokeUniform: true, cornerColor: '#3498db', cornerSize: 10, transparentCorners: false };
-    let _clipboard = null;
+    const canvas = document.getElementById('mainCanvas');
+    const ctx = canvas.getContext('2d');
+    const bank = document.getElementById('word-bank');
+    const ctxMenu = document.getElementById('context-menu');
+    
+    let elements = [], selectedElements = [];
+    let apparatusData = [];
+    let isDragging = false, isResizing = false, isMarquee = false;
+    let marqueeStart = {x:0, y:0}, marqueeEnd = {x:0, y:0}, dragOffset = {x:0, y:0};
+    let currentResizePoint = null, zoomLevel = 1, snapEnabled = true, rightClickedEl = null;
+    
+    canvas.width = 4000; canvas.height = 4000;
 
-    const dataset = {
-        p: [
-            {s:"p1", c:"III", t:"g", k:"Alex"}, {s:"p3", c:"VI/VII", t:"g", k:"Alex"}, {s:"p4", c:"III", t:"g", k:"Alex"}, {s:"p5", c:"III", t:"g", k:"Alex"}, {s:"p6", c:"IV", t:"g", k:"-"}, {s:"p8", c:"IV", t:"a", k:"Alex"}, {s:"p13", c:"III/IV", t:"p", k:"Alex"}, {s:"p16", c:"III/IV", t:"p", k:"Alex"}, {s:"p18", c:"III/IV", t:"r", k:"Alex"}, {s:"p15", c:"III", t:"p", k:"-"}, {s:"p21", c:"IV/V", t:"g", k:"-"}, {s:"p22", c:"III", t:"g", k:"Alex"}, {s:"p23", c:"early III", t:"o", k:"Alex"}, {s:"p24", c:"IV", t:"r", k:"Alex"}, {s:"p25", c:"late IV", t:"g", k:"Western"}, {s:"p27", c:"III", t:"p", k:"Alex"}, {s:"p30", c:"III", t:"p", k:"-"}, {s:"p37", c:"III/IV", t:"g", k:"Caes"}, {s:"p39", c:"III", t:"g", k:"Alex"}, {s:"p40", c:"III", t:"p", k:"Alex"}, {s:"p41", c:"VIII", t:"a", k:"Western"}, {s:"p43", c:"VII/VIII", t:"r", k:"-"}, {s:"p45", c:"III", t:"ga", k:"Caes"}, {s:"p46", c:"c.200", t:"p", k:"Alex"}, {s:"p47", c:"late III", t:"r", k:"Alex"}, {s:"p48", c:"late III", t:"a", k:"Western"}, {s:"p49", c:"late III", t:"p", k:"-"}, {s:"p50", c:"IV/V", t:"a", k:"Alex"}, {s:"p59", c:"VII", t:"g", k:"-"}, {s:"p64", c:"c.200", t:"g", k:"-"}, {s:"p66", c:"c.200", t:"g", k:"Alex"}, {s:"p72", c:"III/IV", t:"r/o", k:"Alex"}, {s:"p74", c:"VII", t:"ao", k:"-"}, {s:"p75", c:"III", t:"g", k:"Alex"}, {s:"p85", c:"IV/V", t:"r", k:"-"}
-        ],
-        u: [
-            {s:"א (01)", n:"Sinaiticus", c:"IV", k:"Alex"}, {s:"A (02)", n:"Alexandrinus", c:"V", k:"Byz(g)/Alex"}, {s:"B (03)", n:"Vaticanus", c:"IV", k:"Alex"}, {s:"C (04)", n:"Ephraemi Res.", c:"V", k:"Alex*"}, {s:"D (05)", n:"Bezae", c:"V/VI", k:"Western"}, {s:"D (06)", n:"Claromontanus", c:"VI", k:"Western"}, {s:"E (08)", n:"Laudianus", c:"VI", k:"Western"}, {s:"L (019)", n:"Regius", c:"VIII", k:"Alex"}, {s:"W (032)", n:"Freer", c:"V", k:"Mixed*"}, {s:"Z (035)", n:"Dublinensis", c:"VI", k:"Alex"}, {s:"048", n:"Codex 048", c:"V", k:"Alex"}, {s:"0171", n:"Codex 0171", c:"IV", k:"Western"}, {s:"0220", n:"Codex 0220", c:"III", k:"Alex"}, {s:"Δ (037)", n:"Sangallensis", c:"IX", k:"Alex"}, {s:"Θ (038)", n:"Koridethi", c:"IX", k:"Caes"}, {s:"Ξ (040)", n:"Zacynthius", c:"VIII", k:"Alex"}
-        ],
-        m: [
-            {s:"f1", c:"XII-XIV", t:"g", k:"Caes"}, {s:"f13", c:"XI-XIII", t:"g", k:"Caes"}, {s:"1", c:"XII", t:"r", k:"-"}, {s:"33", c:"IX", t:"gapo", k:"Alex"}, {s:"61", c:"XVI", t:"gapor", k:"Alex(r)"}, {s:"81", c:"XI", t:"apo", k:"Alex"}, {s:"88", c:"XII", t:"apor", k:"West(p)"}, {s:"157", c:"XII", t:"g", k:"Caes"}, {s:"565", c:"IX", t:"g", k:"Caes"}, {s:"579", c:"XIII", t:"g", k:"Alex"}, {s:"614", c:"XIII", t:"a", k:"Western"}, {s:"700", c:"XI", t:"g", k:"Caes"}, {s:"892", c:"IX", t:"g", k:"Alex"}, {s:"1175", c:"XI", t:"apo", k:"Alex"}, {s:"1241", c:"XII", t:"gapo", k:"Alex(g)"}, {s:"1739", c:"X", t:"a/po", k:"West/Alex"}, {s:"2053", c:"XIII", t:"r", k:"Alex"}, {s:"2495", c:"XIV/XV", t:"gapor", k:"Byz*"}, {s:"Maj", c:"-", t:"gapor", k:"Byzantine"}
-        ],
-        v: [
-            {s:"lat", n:"Old Latin", c:"IV-XIII", k:"Western"}, {s:"vg", n:"Vulgate", c:"IV/V", k:"Western"}, {s:"syr(s)", n:"Sinaitic Syr.", c:"IV", k:"Western*"}, {s:"syr(c)", n:"Curetonian", c:"IV", k:"Western*"}, {s:"syr(p)", n:"Peshitta", c:"V", k:"-"}, {s:"syr(h)", n:"Harclean", c:"VII", k:"-"}, {s:"syr(pal)", n:"Palestinian", c:"V", k:"Caesarean"}, {s:"cop(sa)", n:"Sahidic", c:"III", k:"Alex*"}, {s:"cop(bo)", n:"Bohairic", c:"IV", k:"Alex"}
-        ]
+    // --- NEW: Better Context Menu Logic ---
+    canvas.oncontextmenu = (e) => {
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const mx = (e.clientX - rect.left) / zoomLevel;
+        const my = (e.clientY - rect.top) / zoomLevel;
+
+        // More generous detection for right-clicking lines
+        const clicked = elements.find(el => {
+            if (el.type !== 'single_line') return false;
+            // Check if mouse is near start, end, or middle of line
+            const distToStart = Math.hypot(el.x - mx, el.y - my);
+            const distToEnd = Math.hypot((el.x + el.w * el.flip) - mx, (el.y + el.h) - my);
+            return distToStart < 40 || distToEnd < 40;
+        });
+        
+        if (clicked) {
+            rightClickedEl = clicked;
+            ctxMenu.style.display = 'block';
+            ctxMenu.style.left = e.clientX + 'px';
+            ctxMenu.style.top = e.clientY + 'px';
+        } else {
+            ctxMenu.style.display = 'none';
+        }
     };
 
-    function populate() {
-        const tr = (data, id, keys) => {
-            const b = document.getElementById(id);
-            data.forEach(i => {
-                const r = document.createElement('tr');
-                keys.forEach(k => { const d = document.createElement('td'); d.innerText = i[k]||"-"; r.appendChild(d); });
-                b.appendChild(r);
-            });
-        };
-        tr(dataset.p, 'papyri-body', ['s','c','t','k']);
-        tr(dataset.u, 'uncials-body', ['s','n','c','k']);
-        tr(dataset.m, 'minuscules-body', ['s','c','t','k']);
-        tr(dataset.v, 'versions-body', ['s','n','c','k']);
+    window.onclick = () => { ctxMenu.style.display = 'none'; };
+
+    function setLineStyle(style) {
+        if (rightClickedEl) { rightClickedEl.lineStyle = style; draw(); autoSave(); }
     }
 
-    // Keyboard Shortcuts Logic
-    window.addEventListener('keydown', (e) => {
-        if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName) || document.activeElement.isContentEditable) return;
-        const activeObj = canvas.getActiveObject();
-        const step = e.shiftKey ? 10 : 1;
+    function snapLine(dir) {
+        if (rightClickedEl) {
+            if (dir === 'horizontal') rightClickedEl.h = 0;
+            else if (dir === 'vertical') rightClickedEl.w = 0;
+            draw(); autoSave();
+        }
+    }
 
-        if ((e.key === "Delete" || e.key === "Backspace")) {
-            canvas.getActiveObjects().forEach(obj => canvas.remove(obj));
-            canvas.discardActiveObject().renderAll();
-        }
-        if (activeObj && e.key.startsWith("Arrow")) {
-            e.preventDefault();
-            if (e.key === "ArrowUp") activeObj.top -= step;
-            if (e.key === "ArrowDown") activeObj.top += step;
-            if (e.key === "ArrowLeft") activeObj.left -= step;
-            if (e.key === "ArrowRight") activeObj.left += step;
-            activeObj.setCoords(); canvas.renderAll();
-        }
-        if (e.ctrlKey || e.metaKey) {
-            if (e.key === 'c') canvas.getActiveObject()?.clone(c => _clipboard = c);
-            if (e.key === 'v' && _clipboard) {
-                _clipboard.clone(cloned => {
-                    canvas.discardActiveObject();
-                    cloned.set({ left: cloned.left + 20, top: cloned.top + 20, evented: true });
-                    if (cloned.type === 'activeSelection') { cloned.canvas = canvas; cloned.forEachObject(o => canvas.add(o)); cloned.setCoords(); }
-                    else canvas.add(cloned);
-                    canvas.setActiveObject(cloned); canvas.requestRenderAll();
-                });
+    // --- CNTR Logic ---
+    function launchCNTR() {
+        let textToParse = document.getElementById('verseReference').value.trim() || document.getElementById('projectName').value.trim();
+        if (!textToParse) return;
+        const match = textToParse.match(/(1\s*|2\s*|3\s*)?([a-zA-Z]+)[\s\.]*(\d+)(?:[\s:]+(\d+))?/);
+        if(!match) { window.open("https://greekcntr.org", "_blank"); return; }
+        const bookName = (match[1] ? match[1].replace(/\s+/g, '') : '') + match[2].toLowerCase();
+        const chap = parseInt(match[3]), verse = match[4] ? parseInt(match[4]) : 1; 
+        const ntBooks = {"matthew":40,"matt":40,"mt":40,"mark":41,"mk":41,"luke":42,"lk":42,"john":43,"jhn":43,"jn":43,"acts":44,"romans":45,"rom":45,"1corinthians":46,"1cor":46,"2corinthians":47,"2cor":47,"galatians":48,"gal":48,"ephesians":49,"eph":49,"philippians":50,"phil":50,"colossians":51,"col":51,"1thessalonians":52,"1th":52,"2thessalonians":53,"2th":53,"1timothy":54,"1ti":54,"2timothy":55,"2ti":55,"titus":56,"tit":56,"philemon":57,"phm":57,"hebrews":58,"heb":58,"james":59,"jas":59,"1peter":60,"1pet":60,"2peter":61,"2pet":61,"1john":62,"1jn":62,"2john":63,"2jn":63,"3john":64,"3jn":64,"jude":65,"jud":65,"revelation":66,"rev":66};
+        if (ntBooks[bookName]) { window.open(`https://greekcntr.org/collation/index.htm?${ntBooks[bookName]}${chap.toString().padStart(3,'0')}${verse.toString().padStart(3,'0')}`, "_blank"); }
+        else window.open("https://greekcntr.org", "_blank");
+    }
+
+    // --- Core UI & Logic ---
+    function toggleApparatus() { document.getElementById('apparatus-drawer').classList.toggle('open'); renderApparatus(); }
+    function openVariantModal() { document.getElementById('variant-modal').classList.add('active'); }
+    function closeVariantModal() { document.getElementById('variant-modal').classList.remove('active'); }
+    function saveVariant() {
+        const symbol = document.getElementById('v-symbol').value.trim(); const reading = document.getElementById('v-reading').value.trim();
+        if (!symbol || !reading) return;
+        apparatusData.push({ id: Date.now(), symbol, date: document.getElementById('v-date').value.trim(), name: '', reading, support: '' });
+        closeVariantModal(); renderApparatus(); autoSave();
+    }
+    function renderApparatus() {
+        const list = document.getElementById('apparatus-list'); list.innerHTML = '';
+        apparatusData.forEach(v => { list.innerHTML += `<div class="ms-card"><div class="ms-header"><div><span class="ms-symbol">${v.symbol}</span></div><span class="ms-date">${v.date}</span></div><div class="ms-reading">"${v.reading}"</div></div>`; });
+    }
+
+    function autoSave() { sessionStorage.setItem('syntaxis_autosave', JSON.stringify({ passage: document.getElementById('passageInput').value, elements, apparatus: apparatusData, projectName: document.getElementById('projectName').value, verseReference: document.getElementById('verseReference').value })); }
+    window.addEventListener('DOMContentLoaded', () => { try { const saved = sessionStorage.getItem('syntaxis_autosave'); if (saved) { const d = JSON.parse(saved); elements = d.elements||[]; apparatusData = d.apparatus||[]; document.getElementById('passageInput').value=d.passage||""; document.getElementById('projectName').value=d.projectName||""; document.getElementById('verseReference').value=d.verseReference||""; updateWordBank(); } } catch(e){} updateProjectList(); renderApparatus(); draw(); });
+    function saveToApp() { const name = document.getElementById('projectName').value.trim() || prompt("Project Name:"); if(!name) return; const projects = JSON.parse(localStorage.getItem('syntaxis_projects') || '{}'); projects[name] = { passage: document.getElementById('passageInput').value, elements, apparatus: apparatusData, verseReference: document.getElementById('verseReference').value }; localStorage.setItem('syntaxis_projects', JSON.stringify(projects)); updateProjectList(); autoSave(); }
+    function loadFromApp(name) { const projects = JSON.parse(localStorage.getItem('syntaxis_projects') || '{}'); if (projects[name]) { elements = projects[name].elements; apparatusData = projects[name].apparatus||[]; document.getElementById('passageInput').value = projects[name].passage; document.getElementById('projectName').value = name; document.getElementById('verseReference').value = projects[name].verseReference; updateWordBank(); selectedElements = []; draw(); renderApparatus(); autoSave(); } }
+    function updateProjectList() { const listDiv = document.getElementById('project-list'); listDiv.innerHTML = ''; const projects = JSON.parse(localStorage.getItem('syntaxis_projects') || '{}'); Object.keys(projects).forEach(name => { listDiv.innerHTML += `<div class="proj-card" onclick="loadFromApp('${name}')"><span class="proj-name">${name}</span></div>`; }); }
+
+    function applyStyle(prop, val) { selectedElements.forEach(el => { if (prop === 'bold' && el.type === 'text') el.bold = !el.bold; else el[prop] = val; }); draw(); autoSave(); }
+    function setZoom(delta) { zoomLevel = Math.max(0.2, Math.min(3, zoomLevel + delta)); canvas.style.transform = `scale(${zoomLevel})`; canvas.style.transformOrigin = 'top left'; document.getElementById('zoomLabel').innerText = Math.round(zoomLevel * 100) + '%'; }
+    function toggleSnap() { snapEnabled = !snapEnabled; document.getElementById('snapToggle').style.background = snapEnabled ? '#a9dfbf' : '#fff'; }
+    function updateWordBank() { const words = document.getElementById('passageInput').value.split(/\s+/).filter(w => w.length > 0); bank.innerHTML = ''; words.forEach(word => { const span = document.createElement('span'); span.className = 'bank-word'; span.innerText = word; span.draggable = true; span.onclick = () => span.classList.toggle('selected'); span.ondragstart = (e) => { const sel = Array.from(document.querySelectorAll('.bank-word.selected')); e.dataTransfer.setData("text/plain", sel.length > 0 ? sel.map(s => s.innerText).join(' ') : word); }; bank.appendChild(span); }); }
+    canvas.ondragover = e => e.preventDefault();
+    canvas.ondrop = e => { e.preventDefault(); const rect = canvas.getBoundingClientRect(); const x = snapEnabled ? Math.round(((e.clientX - rect.left) / zoomLevel) / 10) * 10 : (e.clientX - rect.left) / zoomLevel; const y = snapEnabled ? Math.round(((e.clientY - rect.top) / zoomLevel) / 10) * 10 : (e.clientY - rect.top) / zoomLevel; addShape('text', x, y, e.dataTransfer.getData("text/plain")); document.querySelectorAll('.bank-word.selected').forEach(s => s.classList.remove('selected')); };
+    
+    function addShape(type, x=500, y=500, val=null) { 
+        elements.push({ id: Date.now() + Math.random(), type, x, y, w: 120, h: 40, val, flip: 1, group: null, color: '#333', thickness: 2.5, bold: false, lineStyle: 'solid' }); 
+        draw(); autoSave(); 
+    }
+    function addPrepShelf() { elements.push({ id: Date.now() + Math.random(), type: 'prep_shelf', x:500, y:500, w: 120, h: 40, val: null, flip: 1, group: null, color: '#333', thickness: 2.5, dx_top: 50, dy_top: -40, lineStyle: 'solid' }); draw(); autoSave(); }
+    function flipSelected() { selectedElements.forEach(el => el.flip *= -1); draw(); autoSave(); }
+    
+    async function triggerLoad() { if (window.showOpenFilePicker) { const [h] = await window.showOpenFilePicker({ types: [{ description: 'JSON', accept: {'application/json': ['.json']} }] }); processData(await (await h.getFile()).text()); } else { document.getElementById('fileInput').click(); } }
+    function fallbackLoad(e) { const f = e.target.files[0]; if(f) { const r = new FileReader(); r.onload = (ev) => processData(ev.target.result); r.readAsText(f); } }
+    function processData(js) { try { const d = JSON.parse(js); elements = d.elements; apparatusData = d.apparatus||[]; document.getElementById('passageInput').value=d.passage; document.getElementById('projectName').value=d.projectName; document.getElementById('verseReference').value=d.verseReference; updateWordBank(); draw(); renderApparatus(); autoSave(); } catch(e){ alert("Invalid file"); } }
+    async function saveProject() { const data = JSON.stringify({ passage: document.getElementById('passageInput').value, elements, apparatus: apparatusData, projectName: document.getElementById('projectName').value, verseReference: document.getElementById('verseReference').value }, null, 2); let s = (document.getElementById('projectName').value||'diagram')+'.json'; try { if (window.showSaveFilePicker) { const h = await window.showSaveFilePicker({ suggestedName: s }); const w = await h.createWritable(); await w.write(data); await w.close(); } else { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([data], {type: "application/json"})); a.download = s; a.click(); } } catch(e){} }
+    async function exportImage() { if(!elements.length) return; let minX=4000, minY=4000, maxX=0, maxY=0; elements.forEach(el => { const f=el.flip||1; let x1,x2,y1,y2; if(el.type==='prep_shelf'){ x1=Math.min(el.x,el.x+(el.w*f),el.x+(el.dx_top*f)); x2=Math.max(el.x,el.x+(el.w*f),el.x+(el.dx_top*f)); y1=Math.min(el.y,el.y+el.dy_top); y2=Math.max(el.y,el.y+el.dy_top); } else { x1=Math.min(el.x,el.x+(el.w*f)); x2=Math.max(el.x,el.x+(el.w*f)); y1=el.y-el.h; y2=el.y+el.h; } minX=Math.min(minX,x1); minY=Math.min(minY,y1); maxX=Math.max(maxX,x2); maxY=Math.max(maxY,y2); }); minX=Math.max(0,minX-100); minY=Math.max(0,minY-100); maxX=Math.min(canvas.width,maxX+100); maxY=Math.min(canvas.height,maxY+100); const temp=document.createElement('canvas'); temp.width=maxX-minX; temp.height=maxY-minY; const tCtx=temp.getContext('2d'); tCtx.fillStyle='#ffffff'; tCtx.fillRect(0,0,temp.width,temp.height); tCtx.drawImage(canvas,minX,minY,temp.width,temp.height,0,0,temp.width,temp.height); const a=document.createElement('a'); a.download='export.png'; a.href=temp.toDataURL(); a.click(); }
+
+    canvas.onmousedown = (e) => {
+        const rect = canvas.getBoundingClientRect(); const mx = (e.clientX - rect.left) / zoomLevel; const my = (e.clientY - rect.top) / zoomLevel;
+        let targetEl = null, targetPoint = null;
+        elements.forEach(el => {
+            const f = el.flip;
+            if (el.type === 'single_line') {
+                if (Math.hypot(el.x - mx, el.y - my) < 30) { targetEl = el; targetPoint = 'line_start'; }
+                else if (Math.hypot((el.x + el.w * f) - mx, (el.y + el.h) - my) < 30) { targetEl = el; targetPoint = 'line_end'; }
             }
-            if (e.key === 'g' && activeObj?.type === 'activeSelection') { e.preventDefault(); activeObj.toGroup(); canvas.requestRenderAll(); }
-            if (e.key === 'u' && activeObj?.type === 'group') { e.preventDefault(); activeObj.toActiveSelection(); canvas.requestRenderAll(); }
-        }
-    });
-
-    // Sidebar & UI Logic
-    function toggleMsSection(el) { el.nextElementSibling.classList.toggle('open'); el.querySelector('span').innerText = el.nextElementSibling.classList.contains('open') ? '▲' : '▼'; }
-    function toggleSidebar() { document.getElementById('right-bar').classList.toggle('collapsed'); document.getElementById('collapse-btn').innerText = document.getElementById('right-bar').classList.contains('collapsed') ? '◀' : '▶'; }
-    function switchTab(e, id) { document.querySelectorAll('.tab-content, .tab-link').forEach(x => x.classList.remove('active')); document.getElementById(id).classList.add('active'); e.currentTarget.classList.add('active'); }
-    function addVariantRow() { const r = document.querySelector('#variant-table tbody').insertRow(); r.innerHTML = `<td contenteditable="true" style="border:1px solid #eee; padding:8px;"></td><td contenteditable="true" style="border:1px solid #eee; padding:8px;"></td>`; }
-
-    // Word Bank Logic
-    function makeBank() {
-        const bank = document.getElementById('word-bank'); bank.innerHTML = '';
-        document.getElementById('passIn').value.trim().split(/\s+/).forEach((t, i) => {
-            if(!t) return;
-            const s = document.createElement('span'); s.className = 'word'; s.textContent = t; s.draggable = true;
-            s.id = 'word-' + i; // Unique ID for tracking
-            s.onclick = () => s.classList.toggle('selected');
-            s.ondragstart = (e) => {
-                const sel = document.querySelectorAll('.word.selected');
-                const data = sel.length > 0 
-                    ? Array.from(sel).map(w => ({text: w.textContent, id: w.id})) 
-                    : [{text: t, id: s.id}];
-                e.dataTransfer.setData('text/plain', JSON.stringify(data));
-            };
-            bank.appendChild(s);
+            else if (el.type !== 'prep_shelf' && el.type !== 'text' && Math.hypot(el.x + (el.w * f) - mx, el.y + el.h - my) < 25 / zoomLevel) { targetEl = el; targetPoint = 'default'; }
+            else if (el.type === 'prep_shelf') {
+                if (Math.hypot(el.x + (el.dx_top * f) - mx, el.y + el.dy_top - my) < 25 / zoomLevel) { targetEl = el; targetPoint = 'prep_top'; }
+                else if (Math.hypot(el.x + (el.w * f) - mx, el.y - my) < 25 / zoomLevel) { targetEl = el; targetPoint = 'prep_bottom'; }
+            }
         });
+        if (targetEl) { isResizing = true; selectedElements = [targetEl]; currentResizePoint = targetPoint; draw(); return; }
+        const clickedText = elements.find(el => el.type === 'text' && Math.abs(el.x - mx) < 60 && Math.abs(el.y - my) < 25);
+        const clickedShape = elements.find(el => { if(el.type === 'text') return false; return Math.abs(el.y - my) < 30 && mx > Math.min(el.x, el.x + (el.w*el.flip)) - 20 && mx < Math.max(el.x, el.x + (el.w*el.flip)) + 20; });
+        if (clickedText || clickedShape) { const clicked = clickedText || clickedShape; if (!selectedElements.includes(clicked)) { selectedElements = clicked.group ? elements.filter(el => el.group === clicked.group) : [clicked]; } isDragging = true; dragOffset.x = mx; dragOffset.y = my; }
+        else { isMarquee = true; marqueeStart = {x: mx, y: my}; selectedElements = []; }
+        draw();
+    };
+    window.onmousemove = (e) => {
+        const rect = canvas.getBoundingClientRect(); const mx = (e.clientX - rect.left) / zoomLevel; const my = (e.clientY - rect.top) / zoomLevel;
+        if (isResizing) {
+            const el = selectedElements[0], f = el.flip;
+            if (el.type === 'single_line') {
+                if (currentResizePoint === 'line_start') { el.x = snapEnabled ? Math.round(mx/10)*10 : mx; el.y = snapEnabled ? Math.round(my/10)*10 : my; }
+                else { 
+                    el.w = (snapEnabled ? Math.round(mx/10)*10 : mx) - el.x; 
+                    el.h = (snapEnabled ? Math.round(my/10)*10 : my) - el.y; 
+                }
+            } else if (el.type === 'prep_shelf') {
+                if (currentResizePoint === 'prep_top') { el.dx_top = snapEnabled ? Math.round(((mx - el.x) * f) / 10) * 10 : (mx - el.x) * f; el.dy_top = snapEnabled ? Math.round((my - el.y) / 10) * 10 : my - el.y; }
+                else { el.w = Math.max(20, snapEnabled ? Math.round(((mx - el.x) * f) / 10) * 10 : (mx - el.x) * f); }
+            } else { el.w = Math.max(20, snapEnabled ? Math.round(((mx - el.x) * f) / 10) * 10 : (mx - el.x) * f); el.h = Math.max(10, snapEnabled ? Math.round((my - el.y) / 10) * 10 : my - el.y); }
+        } else if (isDragging) { const dx = mx - dragOffset.x, dy = my - dragOffset.y; selectedElements.forEach(el => { el.x += dx; el.y += dy; }); dragOffset.x = mx; dragOffset.y = my; }
+        else if (isMarquee) { marqueeEnd = {x: mx, y: my}; const xMin = Math.min(marqueeStart.x, marqueeEnd.x), xMax = Math.max(marqueeStart.x, marqueeEnd.x), yMin = Math.min(marqueeStart.y, marqueeEnd.y), yMax = Math.max(marqueeStart.y, marqueeEnd.y); selectedElements = elements.filter(el => el.x > xMin && el.x < xMax && el.y > yMin && el.y < yMax); }
+        draw();
+    };
+    window.onmouseup = () => { if (isDragging && snapEnabled) { selectedElements.forEach(el => { el.x = Math.round(el.x / 10) * 10; el.y = Math.round(el.y / 10) * 10; }); } if (isDragging || isResizing || isMarquee) autoSave(); isDragging = isResizing = isMarquee = false; draw(); };
+    window.onkeydown = (e) => { if(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return; const k = e.key.toLowerCase(); if (k === 'g') { const gid = Date.now(); selectedElements.forEach(el => el.group = gid); } else if (k === 'u') { selectedElements.forEach(el => el.group = null); } else if (k === 'f') flipSelected(); else if (e.key === 'Delete' || e.key === 'Backspace') { elements = elements.filter(el => !selectedElements.includes(el)); selectedElements = []; } else if (e.key.startsWith('Arrow')) { const n = e.shiftKey ? 10 : 2; if (e.key === 'ArrowUp') selectedElements.forEach(el => el.y -= n); else if (e.key === 'ArrowDown') selectedElements.forEach(el => el.y += n); else if (e.key === 'ArrowLeft') selectedElements.forEach(el => el.x -= n); else if (e.key === 'ArrowRight') selectedElements.forEach(el => el.x += n); } draw(); autoSave(); };
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.strokeStyle = '#f5f5f5'; ctx.lineWidth = 1;
+        for(let i=0; i<canvas.width; i+=40) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,canvas.height); ctx.stroke(); }
+        for(let j=0; j<canvas.height; j+=40) { ctx.beginPath(); ctx.moveTo(0,j); ctx.lineTo(canvas.width,j); ctx.stroke(); }
+        
+        elements.forEach(el => {
+            const isSel = selectedElements.includes(el), f = el.flip;
+            ctx.beginPath(); ctx.strokeStyle = isSel ? '#3498db' : (el.color || '#333'); ctx.fillStyle = isSel ? '#3498db' : (el.color || '#333'); ctx.lineWidth = el.thickness || 2.5; 
+            ctx.font = `${el.bold ? "bold" : "normal"} italic 20px Georgia`;
+            
+            if (el.lineStyle === 'dashed') ctx.setLineDash([10, 10]);
+            else if (el.lineStyle === 'dotted') ctx.setLineDash([2, 6]);
+            else ctx.setLineDash([]);
+
+            if (el.type === 'subject_baseline') { ctx.moveTo(el.x - (el.w*f), el.y); ctx.lineTo(el.x + (el.w*f), el.y); ctx.moveTo(el.x, el.y - 30); ctx.lineTo(el.x, el.y + 30); }
+            else if (el.type === 'direct_object' || el.type === 'appositive') { ctx.moveTo(el.x, el.y - el.h); ctx.lineTo(el.x, el.y); ctx.lineTo(el.x + (el.w*f), el.y); }
+            else if (el.type === 'modifier') { ctx.moveTo(el.x - (el.w*f*0.3), el.y - el.h); ctx.lineTo(el.x, el.y); ctx.lineTo(el.x + (el.w*f), el.y); }
+            else if (el.type === 'prep_shelf') { ctx.moveTo(el.x + (el.dx_top * f), el.y + el.dy_top); ctx.lineTo(el.x, el.y); ctx.lineTo(el.x + (el.w * f), el.y); }
+            else if (el.type === 'stilt') { ctx.moveTo(el.x - (el.w*f), el.y - el.h); ctx.lineTo(el.x + (el.w*f), el.y - el.h); ctx.moveTo(el.x, el.y - el.h); ctx.lineTo(el.x, el.y); ctx.moveTo(el.x - (20*f), el.y + 25); ctx.lineTo(el.x, el.y); ctx.lineTo(el.x + (20*f), el.y + 25); }
+            else if (el.type === 'fork') { ctx.moveTo(el.x - (30*f), el.y); ctx.lineTo(el.x, el.y); ctx.lineTo(el.x + (el.w*f*0.3), el.y - el.h); ctx.lineTo(el.x + (el.w*f), el.y - el.h); ctx.moveTo(el.x, el.y); ctx.lineTo(el.x + (el.w*f*0.3), el.y + el.h); ctx.lineTo(el.x + (el.w*f), el.y + el.h); ctx.moveTo(el.x + (el.w*f*0.3), el.y - el.h); ctx.lineTo(el.x + (el.w*f*0.3), el.y + el.h); }
+            else if (el.type === 'diamond') { ctx.moveTo(el.x - 30, el.y); ctx.lineTo(el.x, el.y); ctx.lineTo(el.x + (el.w*0.3), el.y - el.h); ctx.lineTo(el.x + (el.w*0.7), el.y - el.h); ctx.lineTo(el.x + el.w, el.y); ctx.moveTo(el.x, el.y); ctx.lineTo(el.x + (el.w*0.3), el.y + el.h); ctx.lineTo(el.x + (el.w*0.7), el.y + el.h); ctx.lineTo(el.x + el.w, el.y); ctx.moveTo(el.x + (el.w*0.3), el.y - el.h); ctx.lineTo(el.x + (el.w*0.3), el.y + el.h); ctx.moveTo(el.x + (el.w*0.7), el.y - el.h); ctx.lineTo(el.x + (el.w*0.7), el.y + el.h); }
+            else if (el.type === 'x_line') { ctx.moveTo(el.x - 30, el.y - 30); ctx.lineTo(el.x + 30, el.y + 30); ctx.moveTo(el.x + 30, el.y - 30); ctx.lineTo(el.x - 30, el.y + 30); }
+            else if (el.type === 'single_line') { ctx.moveTo(el.x, el.y); ctx.lineTo(el.x + (el.w * f), el.y + el.h); }
+            else if (el.type === 'text') { ctx.setLineDash([]); ctx.fillText(el.val, el.x, el.y); }
+            ctx.stroke(); ctx.setLineDash([]);
+
+            if (isSel && el.type !== 'text' && el.type !== 'x_line') {
+                ctx.fillStyle = '#3498db'; const hR = 6 / Math.sqrt(zoomLevel);
+                if (el.type === 'single_line') { ctx.beginPath(); ctx.arc(el.x, el.y, hR, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(el.x + (el.w * f), el.y + el.h, hR, 0, Math.PI*2); ctx.fill(); }
+                else if (el.type === 'prep_shelf') { ctx.beginPath(); ctx.arc(el.x + (el.dx_top * f), el.y + el.dy_top, hR, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(el.x + (el.w * f), el.y, hR, 0, Math.PI*2); ctx.fill(); }
+                else { ctx.beginPath(); ctx.arc(el.x + (el.w*f), el.y + el.h, hR, 0, Math.PI*2); ctx.fill(); }
+            }
+        });
+        if (isMarquee) { ctx.setLineDash([5, 5]); ctx.strokeStyle = '#3498db'; ctx.lineWidth = 1; ctx.strokeRect(marqueeStart.x, marqueeStart.y, marqueeEnd.x - marqueeStart.x, marqueeEnd.y - marqueeStart.y); ctx.setLineDash([]); }
     }
-
-    canvas.on('drop', opt => {
-        try {
-            const words = JSON.parse(opt.e.dataTransfer.getData('text/plain'));
-            const ptr = canvas.getPointer(opt.e);
-            words.forEach((item, i) => {
-                canvas.add(new fabric.IText(item.text, { left: ptr.x + (i*15), top: ptr.y + (i*15), fontSize: 24, fontFamily: 'Times New Roman' }));
-                // Remove the word from the bank upon successful drop
-                const el = document.getElementById(item.id);
-                if(el) el.remove();
-            });
-        } catch(e) {}
-    });
-
-    function addShape(type) {
-        let obj;
-        if(type==='line') obj = new fabric.Line([0,0,150,0], lineStyle);
-        else if(type==='cross') obj = new fabric.Group([new fabric.Line([0,20,150,20], lineStyle), new fabric.Line([75,0,75,40], lineStyle)], {strokeUniform:true});
-        else if(type==='do') obj = new fabric.Group([new fabric.Line([0,20,150,20], lineStyle), new fabric.Line([40,5,40,20], lineStyle)], {strokeUniform:true});
-        else if(type==='dblacc') obj = new fabric.Group([new fabric.Line([0,20,180,20], lineStyle), new fabric.Line([50,5,50,20], lineStyle), new fabric.Line([110,5,110,20], lineStyle)], {strokeUniform:true});
-        else if(type==='frame') obj = new fabric.Group([new fabric.Line([0,22,15,22],lineStyle), new fabric.Line([15,22,25,10],lineStyle), new fabric.Line([15,22,25,35],lineStyle), new fabric.Line([25,10,125,10],lineStyle), new fabric.Line([25,35,125,35],lineStyle)], {strokeUniform:true});
-        else if(type==='stilt') obj = new fabric.Group([new fabric.Line([0, 10, 150, 10], lineStyle), new fabric.Line([75, 10, 75, 60], lineStyle), new fabric.Line([75, 60, 45, 100], lineStyle), new fabric.Line([75, 60, 105, 100], lineStyle)], { strokeUniform: true });
-        else if(type==='shelf') { createSmartPoly([{x:0,y:40},{x:0,y:0},{x:100,y:0},{x:100,y:40}], 300, 300); return; }
-        else if(type==='smart-mod') { createSmartPoly([{x:30,y:0},{x:0,y:60},{x:120,y:60}], 300, 300); return; }
-        obj.set({ left: 300, top: 300 }); canvas.add(obj); canvas.setActiveObject(obj); canvas.renderAll();
-    }
-
-    function createSmartPoly(points, left, top) {
-        const poly = new fabric.Polyline(points, { ...lineStyle, left, top, objectCaching: false, hasBorders: false, lockRotation: true, lockScalingX: true, lockScalingY: true });
-        poly.controls = poly.points.reduce((acc, point, index) => {
-            acc['p' + index] = new fabric.Control({
-                positionHandler: (dim, finalMatrix, fabricObject) => fabric.util.transformPoint({ x: fabricObject.points[index].x - fabricObject.pathOffset.x, y: fabricObject.points[index].y - fabricObject.pathOffset.y }, finalMatrix),
-                actionHandler: (eventData, transform, x, y) => {
-                    let polygon = transform.target;
-                    let mouseLocal = polygon.toLocalPoint(new fabric.Point(x, y), 'center', 'center');
-                    polygon.points[index] = { x: mouseLocal.x + polygon.pathOffset.x, y: mouseLocal.y + polygon.pathOffset.y };
-                    return true;
-                },
-                cursorStyle: 'crosshair', render: (ctx, l, t) => { ctx.save(); ctx.fillStyle = '#3498db'; ctx.beginPath(); ctx.arc(l, t, 6, 0, 2*Math.PI); ctx.fill(); ctx.restore(); }
-            });
-            return acc;
-        }, {});
-        canvas.add(poly); canvas.setActiveObject(poly); canvas.renderAll();
-    }
-
-    canvas.on('mouse:down', (opt) => { if (opt.button === 3 && opt.target && opt.target.type !== 'i-text') { const m = document.getElementById('context-menu'); m.style.display = 'block'; m.style.left = opt.e.clientX + 'px'; m.style.top = opt.e.clientY + 'px'; } else document.getElementById('context-menu').style.display = 'none'; });
-    function setStroke(style) { const obj = canvas.getActiveObject(); if (!obj) return; const dashMap = { 'solid': null, 'dashed': [10, 5], 'dotted': [2, 4] }; if (obj.type === 'group') obj.getObjects().forEach(o => o.set('strokeDashArray', dashMap[style])); else obj.set('strokeDashArray', dashMap[style]); canvas.renderAll(); document.getElementById('context-menu').style.display = 'none'; }
-    function addElliptical() { const t = prompt("Word:"); if(t) canvas.add(new fabric.IText(`(${t})`, { left: 300, top: 300, fontSize: 24, fontStyle: 'italic', opacity: 0.6 })); }
-
-    window.onload = populate;
 </script>
 </body>
 </html>
