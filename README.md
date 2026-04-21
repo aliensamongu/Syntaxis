@@ -1,5 +1,5 @@
 Σyntaxis Pro
-Disclaimer: I am not the author of this code, but used AI (Artificial Intelligence) to help me write this program.
+<b>Disclaimer: I am not the author of this code, but used AI (Artificial Intelligence) to help me write this program.</b>
 
 Σyntaxis Pro is a highly specialized, offline-first Reed-Kellogg diagramming engine and textual criticism workspace. Designed for linguists and biblical scholars, it combines precision syntax mapping with a built-in manuscript apparatus, all contained within a single, portable HTML/JS file.
 
