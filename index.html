@@ -107,7 +107,6 @@
             box-shadow: var(--shadow-subtle);
         }
         
-        /* NEW: Context Menu Design */
         #context-menu {
             position: fixed; display: none; background: #fff; border: 1px solid var(--border-color);
             border-radius: var(--radius-small); box-shadow: var(--shadow-medium);
@@ -162,7 +161,9 @@
             <div class="tool" onclick="addShape('subject_baseline')"><svg viewBox="0 0 100 100"><line x1="10" y1="50" x2="90" y2="50"/><line x1="50" y1="35" x2="50" y2="65"/></svg>Subject</div>
             <div class="tool" onclick="addShape('direct_object')"><svg viewBox="0 0 100 100"><polyline points="30,20 30,70 80,70"/></svg>Direct Obj.</div>
             <div class="tool" onclick="addShape('modifier')"><svg viewBox="0 0 100 100"><polyline points="30,20 50,70 95,70"/></svg>Modifier</div>
-            <div class="tool" onclick="addShape('appositive')"><svg viewBox="0 0 100 100"><polyline points="30,20 30,70 80,70"/></svg>Appositive</div>
+            
+            <div class="tool" onclick="addShape('appositive')"><svg viewBox="0 0 100 100"><polyline points="30,20 30,70 80,70"/></svg>Participle</div>
+            
             <div class="tool" onclick="addShape('x_line')"><svg viewBox="0 0 100 100"><line x1="30" y1="30" x2="70" y2="70"/><line x1="70" y1="30" x2="30" y2="70"/></svg>Understood (X)</div>
             <div class="tool" onclick="addShape('diamond')"><svg viewBox="0 0 100 100"><path d="M5,50 L25,50 L45,20 L75,20 L95,50 L75,80 L45,80 L25,50 M45,20 L45,80 M75,20 L75,80"/></svg>Compound</div>
             <div class="tool" onclick="addShape('stilt')"><svg viewBox="0 0 100 100"><line x1="10" y1="30" x2="90" y2="30"/><line x1="50" y1="30" x2="50" y2="60"/><path d="M30,90 L50,60 L70,90"/></svg>Platform Stilt</div>
@@ -248,67 +249,47 @@
     
     canvas.width = 4000; canvas.height = 4000;
 
-    // --- NEW: Better Context Menu Logic ---
     canvas.oncontextmenu = (e) => {
         e.preventDefault();
         const rect = canvas.getBoundingClientRect();
         const mx = (e.clientX - rect.left) / zoomLevel;
         const my = (e.clientY - rect.top) / zoomLevel;
-
-        // More generous detection for right-clicking lines
         const clicked = elements.find(el => {
             if (el.type !== 'single_line') return false;
-            // Check if mouse is near start, end, or middle of line
             const distToStart = Math.hypot(el.x - mx, el.y - my);
             const distToEnd = Math.hypot((el.x + el.w * el.flip) - mx, (el.y + el.h) - my);
             return distToStart < 40 || distToEnd < 40;
         });
-        
         if (clicked) {
             rightClickedEl = clicked;
             ctxMenu.style.display = 'block';
             ctxMenu.style.left = e.clientX + 'px';
             ctxMenu.style.top = e.clientY + 'px';
-        } else {
-            ctxMenu.style.display = 'none';
-        }
+        } else { ctxMenu.style.display = 'none'; }
     };
 
     window.onclick = () => { ctxMenu.style.display = 'none'; };
+    function setLineStyle(style) { if (rightClickedEl) { rightClickedEl.lineStyle = style; draw(); autoSave(); } }
+    function snapLine(dir) { if (rightClickedEl) { if (dir === 'horizontal') rightClickedEl.h = 0; else if (dir === 'vertical') rightClickedEl.w = 0; draw(); autoSave(); } }
 
-    function setLineStyle(style) {
-        if (rightClickedEl) { rightClickedEl.lineStyle = style; draw(); autoSave(); }
-    }
-
-    function snapLine(dir) {
-        if (rightClickedEl) {
-            if (dir === 'horizontal') rightClickedEl.h = 0;
-            else if (dir === 'vertical') rightClickedEl.w = 0;
-            draw(); autoSave();
-        }
-    }
-
-    // --- CNTR Logic ---
     function launchCNTR() {
         let textToParse = document.getElementById('verseReference').value.trim() || document.getElementById('projectName').value.trim();
         if (!textToParse) return;
         const match = textToParse.match(/(1\s*|2\s*|3\s*)?([a-zA-Z]+)[\s\.]*(\d+)(?:[\s:]+(\d+))?/);
         if(!match) { window.open("https://greekcntr.org", "_blank"); return; }
         const bookName = (match[1] ? match[1].replace(/\s+/g, '') : '') + match[2].toLowerCase();
-        const chap = parseInt(match[3]), verse = match[4] ? parseInt(match[4]) : 1; 
         const ntBooks = {"matthew":40,"matt":40,"mt":40,"mark":41,"mk":41,"luke":42,"lk":42,"john":43,"jhn":43,"jn":43,"acts":44,"romans":45,"rom":45,"1corinthians":46,"1cor":46,"2corinthians":47,"2cor":47,"galatians":48,"gal":48,"ephesians":49,"eph":49,"philippians":50,"phil":50,"colossians":51,"col":51,"1thessalonians":52,"1th":52,"2thessalonians":53,"2th":53,"1timothy":54,"1ti":54,"2timothy":55,"2ti":55,"titus":56,"tit":56,"philemon":57,"phm":57,"hebrews":58,"heb":58,"james":59,"jas":59,"1peter":60,"1pet":60,"2peter":61,"2pet":61,"1john":62,"1jn":62,"2john":63,"2jn":63,"3john":64,"3jn":64,"jude":65,"jud":65,"revelation":66,"rev":66};
-        if (ntBooks[bookName]) { window.open(`https://greekcntr.org/collation/index.htm?${ntBooks[bookName]}${chap.toString().padStart(3,'0')}${verse.toString().padStart(3,'0')}`, "_blank"); }
+        if (ntBooks[bookName]) { window.open(`https://greekcntr.org/collation/index.htm?${ntBooks[bookName]}${parseInt(match[3]).toString().padStart(3,'0')}${(match[4]?parseInt(match[4]):1).toString().padStart(3,'0')}`, "_blank"); }
         else window.open("https://greekcntr.org", "_blank");
     }
 
-    // --- Core UI & Logic ---
     function toggleApparatus() { document.getElementById('apparatus-drawer').classList.toggle('open'); renderApparatus(); }
     function openVariantModal() { document.getElementById('variant-modal').classList.add('active'); }
     function closeVariantModal() { document.getElementById('variant-modal').classList.remove('active'); }
     function saveVariant() {
         const symbol = document.getElementById('v-symbol').value.trim(); const reading = document.getElementById('v-reading').value.trim();
         if (!symbol || !reading) return;
-        apparatusData.push({ id: Date.now(), symbol, date: document.getElementById('v-date').value.trim(), name: '', reading, support: '' });
+        apparatusData.push({ id: Date.now(), symbol, date: document.getElementById('v-date').value.trim(), reading });
         closeVariantModal(); renderApparatus(); autoSave();
     }
     function renderApparatus() {
@@ -329,16 +310,12 @@
     canvas.ondragover = e => e.preventDefault();
     canvas.ondrop = e => { e.preventDefault(); const rect = canvas.getBoundingClientRect(); const x = snapEnabled ? Math.round(((e.clientX - rect.left) / zoomLevel) / 10) * 10 : (e.clientX - rect.left) / zoomLevel; const y = snapEnabled ? Math.round(((e.clientY - rect.top) / zoomLevel) / 10) * 10 : (e.clientY - rect.top) / zoomLevel; addShape('text', x, y, e.dataTransfer.getData("text/plain")); document.querySelectorAll('.bank-word.selected').forEach(s => s.classList.remove('selected')); };
     
-    function addShape(type, x=500, y=500, val=null) { 
-        elements.push({ id: Date.now() + Math.random(), type, x, y, w: 120, h: 40, val, flip: 1, group: null, color: '#333', thickness: 2.5, bold: false, lineStyle: 'solid' }); 
-        draw(); autoSave(); 
-    }
+    function addShape(type, x=500, y=500, val=null) { elements.push({ id: Date.now() + Math.random(), type, x, y, w: 120, h: 40, val, flip: 1, group: null, color: '#333', thickness: 2.5, bold: false, lineStyle: 'solid' }); draw(); autoSave(); }
     function addPrepShelf() { elements.push({ id: Date.now() + Math.random(), type: 'prep_shelf', x:500, y:500, w: 120, h: 40, val: null, flip: 1, group: null, color: '#333', thickness: 2.5, dx_top: 50, dy_top: -40, lineStyle: 'solid' }); draw(); autoSave(); }
     function flipSelected() { selectedElements.forEach(el => el.flip *= -1); draw(); autoSave(); }
-    
+    function processData(js) { try { const d = JSON.parse(js); elements = d.elements; apparatusData = d.apparatus||[]; document.getElementById('passageInput').value=d.passage; document.getElementById('projectName').value=d.projectName; document.getElementById('verseReference').value=d.verseReference; updateWordBank(); draw(); renderApparatus(); autoSave(); } catch(e){ alert("Invalid file"); } }
     async function triggerLoad() { if (window.showOpenFilePicker) { const [h] = await window.showOpenFilePicker({ types: [{ description: 'JSON', accept: {'application/json': ['.json']} }] }); processData(await (await h.getFile()).text()); } else { document.getElementById('fileInput').click(); } }
     function fallbackLoad(e) { const f = e.target.files[0]; if(f) { const r = new FileReader(); r.onload = (ev) => processData(ev.target.result); r.readAsText(f); } }
-    function processData(js) { try { const d = JSON.parse(js); elements = d.elements; apparatusData = d.apparatus||[]; document.getElementById('passageInput').value=d.passage; document.getElementById('projectName').value=d.projectName; document.getElementById('verseReference').value=d.verseReference; updateWordBank(); draw(); renderApparatus(); autoSave(); } catch(e){ alert("Invalid file"); } }
     async function saveProject() { const data = JSON.stringify({ passage: document.getElementById('passageInput').value, elements, apparatus: apparatusData, projectName: document.getElementById('projectName').value, verseReference: document.getElementById('verseReference').value }, null, 2); let s = (document.getElementById('projectName').value||'diagram')+'.json'; try { if (window.showSaveFilePicker) { const h = await window.showSaveFilePicker({ suggestedName: s }); const w = await h.createWritable(); await w.write(data); await w.close(); } else { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([data], {type: "application/json"})); a.download = s; a.click(); } } catch(e){} }
     async function exportImage() { if(!elements.length) return; let minX=4000, minY=4000, maxX=0, maxY=0; elements.forEach(el => { const f=el.flip||1; let x1,x2,y1,y2; if(el.type==='prep_shelf'){ x1=Math.min(el.x,el.x+(el.w*f),el.x+(el.dx_top*f)); x2=Math.max(el.x,el.x+(el.w*f),el.x+(el.dx_top*f)); y1=Math.min(el.y,el.y+el.dy_top); y2=Math.max(el.y,el.y+el.dy_top); } else { x1=Math.min(el.x,el.x+(el.w*f)); x2=Math.max(el.x,el.x+(el.w*f)); y1=el.y-el.h; y2=el.y+el.h; } minX=Math.min(minX,x1); minY=Math.min(minY,y1); maxX=Math.max(maxX,x2); maxY=Math.max(maxY,y2); }); minX=Math.max(0,minX-100); minY=Math.max(0,minY-100); maxX=Math.min(canvas.width,maxX+100); maxY=Math.min(canvas.height,maxY+100); const temp=document.createElement('canvas'); temp.width=maxX-minX; temp.height=maxY-minY; const tCtx=temp.getContext('2d'); tCtx.fillStyle='#ffffff'; tCtx.fillRect(0,0,temp.width,temp.height); tCtx.drawImage(canvas,minX,minY,temp.width,temp.height,0,0,temp.width,temp.height); const a=document.createElement('a'); a.download='export.png'; a.href=temp.toDataURL(); a.click(); }
 
@@ -347,15 +324,9 @@
         let targetEl = null, targetPoint = null;
         elements.forEach(el => {
             const f = el.flip;
-            if (el.type === 'single_line') {
-                if (Math.hypot(el.x - mx, el.y - my) < 30) { targetEl = el; targetPoint = 'line_start'; }
-                else if (Math.hypot((el.x + el.w * f) - mx, (el.y + el.h) - my) < 30) { targetEl = el; targetPoint = 'line_end'; }
-            }
+            if (el.type === 'single_line') { if (Math.hypot(el.x - mx, el.y - my) < 30) { targetEl = el; targetPoint = 'line_start'; } else if (Math.hypot((el.x + el.w * f) - mx, (el.y + el.h) - my) < 30) { targetEl = el; targetPoint = 'line_end'; } }
             else if (el.type !== 'prep_shelf' && el.type !== 'text' && Math.hypot(el.x + (el.w * f) - mx, el.y + el.h - my) < 25 / zoomLevel) { targetEl = el; targetPoint = 'default'; }
-            else if (el.type === 'prep_shelf') {
-                if (Math.hypot(el.x + (el.dx_top * f) - mx, el.y + el.dy_top - my) < 25 / zoomLevel) { targetEl = el; targetPoint = 'prep_top'; }
-                else if (Math.hypot(el.x + (el.w * f) - mx, el.y - my) < 25 / zoomLevel) { targetEl = el; targetPoint = 'prep_bottom'; }
-            }
+            else if (el.type === 'prep_shelf') { if (Math.hypot(el.x + (el.dx_top * f) - mx, el.y + el.dy_top - my) < 25 / zoomLevel) { targetEl = el; targetPoint = 'prep_top'; } else if (Math.hypot(el.x + (el.w * f) - mx, el.y - my) < 25 / zoomLevel) { targetEl = el; targetPoint = 'prep_bottom'; } }
         });
         if (targetEl) { isResizing = true; selectedElements = [targetEl]; currentResizePoint = targetPoint; draw(); return; }
         const clickedText = elements.find(el => el.type === 'text' && Math.abs(el.x - mx) < 60 && Math.abs(el.y - my) < 25);
@@ -368,16 +339,9 @@
         const rect = canvas.getBoundingClientRect(); const mx = (e.clientX - rect.left) / zoomLevel; const my = (e.clientY - rect.top) / zoomLevel;
         if (isResizing) {
             const el = selectedElements[0], f = el.flip;
-            if (el.type === 'single_line') {
-                if (currentResizePoint === 'line_start') { el.x = snapEnabled ? Math.round(mx/10)*10 : mx; el.y = snapEnabled ? Math.round(my/10)*10 : my; }
-                else { 
-                    el.w = (snapEnabled ? Math.round(mx/10)*10 : mx) - el.x; 
-                    el.h = (snapEnabled ? Math.round(my/10)*10 : my) - el.y; 
-                }
-            } else if (el.type === 'prep_shelf') {
-                if (currentResizePoint === 'prep_top') { el.dx_top = snapEnabled ? Math.round(((mx - el.x) * f) / 10) * 10 : (mx - el.x) * f; el.dy_top = snapEnabled ? Math.round((my - el.y) / 10) * 10 : my - el.y; }
-                else { el.w = Math.max(20, snapEnabled ? Math.round(((mx - el.x) * f) / 10) * 10 : (mx - el.x) * f); }
-            } else { el.w = Math.max(20, snapEnabled ? Math.round(((mx - el.x) * f) / 10) * 10 : (mx - el.x) * f); el.h = Math.max(10, snapEnabled ? Math.round((my - el.y) / 10) * 10 : my - el.y); }
+            if (el.type === 'single_line') { if (currentResizePoint === 'line_start') { el.x = snapEnabled ? Math.round(mx/10)*10 : mx; el.y = snapEnabled ? Math.round(my/10)*10 : my; } else { el.w = (snapEnabled ? Math.round(mx/10)*10 : mx) - el.x; el.h = (snapEnabled ? Math.round(my/10)*10 : my) - el.y; } }
+            else if (el.type === 'prep_shelf') { if (currentResizePoint === 'prep_top') { el.dx_top = snapEnabled ? Math.round(((mx - el.x) * f) / 10) * 10 : (mx - el.x) * f; el.dy_top = snapEnabled ? Math.round((my - el.y) / 10) * 10 : my - el.y; } else { el.w = Math.max(20, snapEnabled ? Math.round(((mx - el.x) * f) / 10) * 10 : (mx - el.x) * f); } }
+            else { el.w = Math.max(20, snapEnabled ? Math.round(((mx - el.x) * f) / 10) * 10 : (mx - el.x) * f); el.h = Math.max(10, snapEnabled ? Math.round((my - el.y) / 10) * 10 : my - el.y); }
         } else if (isDragging) { const dx = mx - dragOffset.x, dy = my - dragOffset.y; selectedElements.forEach(el => { el.x += dx; el.y += dy; }); dragOffset.x = mx; dragOffset.y = my; }
         else if (isMarquee) { marqueeEnd = {x: mx, y: my}; const xMin = Math.min(marqueeStart.x, marqueeEnd.x), xMax = Math.max(marqueeStart.x, marqueeEnd.x), yMin = Math.min(marqueeStart.y, marqueeEnd.y), yMax = Math.max(marqueeStart.y, marqueeEnd.y); selectedElements = elements.filter(el => el.x > xMin && el.x < xMax && el.y > yMin && el.y < yMax); }
         draw();
@@ -389,16 +353,10 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.strokeStyle = '#f5f5f5'; ctx.lineWidth = 1;
         for(let i=0; i<canvas.width; i+=40) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,canvas.height); ctx.stroke(); }
         for(let j=0; j<canvas.height; j+=40) { ctx.beginPath(); ctx.moveTo(0,j); ctx.lineTo(canvas.width,j); ctx.stroke(); }
-        
         elements.forEach(el => {
-            const isSel = selectedElements.includes(el), f = el.flip;
-            ctx.beginPath(); ctx.strokeStyle = isSel ? '#3498db' : (el.color || '#333'); ctx.fillStyle = isSel ? '#3498db' : (el.color || '#333'); ctx.lineWidth = el.thickness || 2.5; 
+            const isSel = selectedElements.includes(el), f = el.flip; ctx.beginPath(); ctx.strokeStyle = isSel ? '#3498db' : (el.color || '#333'); ctx.fillStyle = isSel ? '#3498db' : (el.color || '#333'); ctx.lineWidth = el.thickness || 2.5; 
             ctx.font = `${el.bold ? "bold" : "normal"} italic 20px Georgia`;
-            
-            if (el.lineStyle === 'dashed') ctx.setLineDash([10, 10]);
-            else if (el.lineStyle === 'dotted') ctx.setLineDash([2, 6]);
-            else ctx.setLineDash([]);
-
+            if (el.lineStyle === 'dashed') ctx.setLineDash([10, 10]); else if (el.lineStyle === 'dotted') ctx.setLineDash([2, 6]); else ctx.setLineDash([]);
             if (el.type === 'subject_baseline') { ctx.moveTo(el.x - (el.w*f), el.y); ctx.lineTo(el.x + (el.w*f), el.y); ctx.moveTo(el.x, el.y - 30); ctx.lineTo(el.x, el.y + 30); }
             else if (el.type === 'direct_object' || el.type === 'appositive') { ctx.moveTo(el.x, el.y - el.h); ctx.lineTo(el.x, el.y); ctx.lineTo(el.x + (el.w*f), el.y); }
             else if (el.type === 'modifier') { ctx.moveTo(el.x - (el.w*f*0.3), el.y - el.h); ctx.lineTo(el.x, el.y); ctx.lineTo(el.x + (el.w*f), el.y); }
@@ -410,7 +368,6 @@
             else if (el.type === 'single_line') { ctx.moveTo(el.x, el.y); ctx.lineTo(el.x + (el.w * f), el.y + el.h); }
             else if (el.type === 'text') { ctx.setLineDash([]); ctx.fillText(el.val, el.x, el.y); }
             ctx.stroke(); ctx.setLineDash([]);
-
             if (isSel && el.type !== 'text' && el.type !== 'x_line') {
                 ctx.fillStyle = '#3498db'; const hR = 6 / Math.sqrt(zoomLevel);
                 if (el.type === 'single_line') { ctx.beginPath(); ctx.arc(el.x, el.y, hR, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(el.x + (el.w * f), el.y + el.h, hR, 0, Math.PI*2); ctx.fill(); }
