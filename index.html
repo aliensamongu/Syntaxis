@@ -6,17 +6,16 @@
     <style>
         :root {
             --sidebar-width: 380px;
-            --accent-bg: #fdfdfd;
-            --bg-main: #f0f3f5;
-            --text-primary: #2c3e50;
-            --text-secondary: #7f8c8d;
-            --border-color: #e6e9eb;
-            --blue: #3498db;
-            --green: #2ecc71;
-            --orange: #f39c12;
-            --red: #e74c3c;
-            --shadow-subtle: 0 4px 6px rgba(0,0,0,0.05);
-            --shadow-medium: 0 10px 15px rgba(0,0,0,0.08);
+            --right-sidebar-width: 320px;
+            --bg-main: #e4e7ea;
+            
+            /* Oxford Scholar Palette */
+            --oxford-navy: #1B263B;
+            --oxford-navy-dark: #121A2A;
+            --oxford-cream: #F8F5EE;
+            --oxford-gold: #C5A059;
+            --oxford-crimson: #8C1C13;
+            
             --radius-small: 8px;
             --radius-medium: 12px;
         }
@@ -24,120 +23,122 @@
         body {
             margin: 0; display: flex; height: 100vh;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            overflow: hidden; background: var(--bg-main); color: var(--text-primary);
+            overflow: hidden; background: var(--bg-main);
         }
         
+        /* Left Sidebar (Tools) */
         #sidebar {
-            width: var(--sidebar-width); background: var(--accent-bg);
-            border-right: 1px solid var(--border-color); display: flex; flex-direction: column;
-            z-index: 100; box-shadow: 10px 0 30px rgba(0,0,0,0.04);
+            width: var(--sidebar-width); background: var(--oxford-navy); flex-shrink: 0;
+            border-right: 1px solid var(--oxford-navy-dark); display: flex; flex-direction: column;
+            z-index: 100; box-shadow: 2px 0 15px rgba(0,0,0,0.15);
         }
-        .sidebar-inner { padding: 30px; display: flex; flex-direction: column; flex-grow: 1; overflow-y: auto; }
+        .sidebar-inner { padding: 25px; display: flex; flex-direction: column; flex-grow: 1; overflow-y: auto; }
         
-        h2 { margin: 0; color: var(--text-primary); font-family: Georgia, serif; font-size: 26px; }
-        .ix { font-size: 16px; text-decoration: overline; margin-left: 6px; font-weight: bold; }
-        
+        /* Right Sidebar (Word Bank) */
+        #right-sidebar {
+            width: var(--right-sidebar-width); background: var(--oxford-navy); flex-shrink: 0;
+            border-left: 1px solid var(--oxford-navy-dark); display: flex; flex-direction: column;
+            z-index: 90; box-shadow: -2px 0 15px rgba(0,0,0,0.15);
+        }
+        .right-inner { padding: 25px; display: flex; flex-direction: column; flex-grow: 1; overflow-y: hidden; }
+
+        h2 { margin: 0; color: var(--oxford-cream); font-family: Georgia, serif; font-size: 24px; }
+        .ix { font-size: 14px; text-decoration: overline; margin-left: 4px; font-weight: bold; color: var(--oxford-gold); }
+        h3 { margin: 0 0 10px 0; font-size: 13px; color: var(--oxford-gold); text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
+
         input[type="text"], textarea {
             width: 100%; box-sizing: border-box; border-radius: var(--radius-small);
-            border: 1px solid var(--border-color); padding: 12px;
-            font-family: inherit; font-size: 13px; color: var(--text-primary);
-            transition: border-color 0.15s; outline: none;
+            border: 1px solid var(--oxford-navy-dark); padding: 10px;
+            font-family: inherit; font-size: 13px; color: var(--oxford-navy);
+            background: var(--oxford-cream); transition: 0.1s; outline: none;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
         }
-        input[type="text"]:focus, textarea:focus { border-color: var(--blue); }
-        textarea { height: 100px; margin-top: 15px; resize: none; line-height: 1.5; }
+        input[type="text"]:focus, textarea:focus { border-color: var(--oxford-gold); box-shadow: 0 0 0 2px rgba(197, 160, 89, 0.3); }
+        textarea { height: 120px; flex-shrink: 0; resize: none; line-height: 1.4; }
         
         #word-bank {
-            height: 140px; margin-top: 15px; overflow-y: auto; padding: 15px;
-            display: flex; flex-wrap: wrap; align-content: flex-start; gap: 10px;
-            background: #fafafa; border-radius: var(--radius-medium);
-            border: 1px solid var(--border-color); box-shadow: inset 0 2px 5px rgba(0,0,0,0.02);
+            flex-grow: 1; margin-top: 15px; overflow-y: auto; padding: 15px;
+            display: flex; flex-wrap: wrap; align-content: flex-start; gap: 6px 10px;
+            background: var(--oxford-navy-dark); border-radius: var(--radius-medium);
+            border: 1px solid rgba(255,255,255,0.05);
         }
-        .bank-word {
-            font-family: Georgia, serif; font-size: 19px; font-style: italic;
-            cursor: grab; padding: 6px 12px; user-select: none;
-            border-radius: var(--radius-small); background: #fff;
-            border: 1px solid var(--border-color); transition: 0.15s;
-        }
-        .bank-word:hover { box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
-        .bank-word.selected { background: var(--blue); color: white; border-color: var(--blue); }
+        #word-bank::-webkit-scrollbar { width: 6px; }
+        #word-bank::-webkit-scrollbar-thumb { background: #3A4A63; border-radius: 10px; }
         
-        .palette { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 25px; }
-        .tool {
-            padding: 12px; border: 1px solid var(--border-color); border-radius: var(--radius-medium);
-            text-align: center; background: #fff; cursor: pointer;
-            font-size: 11px; font-weight: bold; transition: 0.15s; line-height: 1.3;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+        .bank-word {
+            font-family: Georgia, serif; font-size: 19px; color: var(--oxford-cream);
+            cursor: grab; padding: 4px 8px; user-select: none;
+            border-radius: var(--radius-small); background: transparent;
+            transition: 0.1s; border: none;
         }
-        .tool:hover { border-color: #bdc3c7; box-shadow: 0 6px 12px rgba(0,0,0,0.06); }
-        .tool svg { width: 32px; height: 32px; stroke: #444; fill: none; stroke-width: 3.5; display: block; margin: 0 auto 8px; }
+        .bank-word:hover { background: rgba(255,255,255,0.1); }
+        .bank-word.selected { background: var(--oxford-gold); color: var(--oxford-navy); font-weight: bold; }
+        
+        .palette { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 20px; }
+        .tool {
+            padding: 10px; border: 1px solid var(--oxford-navy-dark); border-radius: var(--radius-medium);
+            text-align: center; background: var(--oxford-cream); cursor: pointer;
+            color: var(--oxford-navy); font-size: 11px; font-weight: bold; transition: 0.1s; line-height: 1.2;
+        }
+        .tool:hover { background: #fff; transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+        .tool svg { width: 28px; height: 28px; stroke: var(--oxford-navy); fill: none; stroke-width: 3.5; display: block; margin: 0 auto 6px; }
         
         .std-btn {
-            border: none; padding: 12px; border-radius: var(--radius-small);
-            cursor: pointer; font-weight: bold; font-size: 12px; text-transform: uppercase;
-            letter-spacing: 0.5px; transition: 0.15s;
+            border: none; padding: 10px; border-radius: var(--radius-small);
+            cursor: pointer; font-weight: bold; font-size: 11px; text-transform: uppercase;
+            transition: 0.1s;
         }
         
-        #canvas-viewport { flex-grow: 1; overflow: auto; position: relative; }
-        canvas { background: #fff; display: block; box-shadow: var(--shadow-medium); margin: 60px; cursor: crosshair; }
+        #canvas-viewport { flex-grow: 1; overflow: auto; position: relative; background: var(--bg-main); }
+        canvas { background: #fff; display: block; cursor: crosshair; box-shadow: 0 0 20px rgba(0,0,0,0.05); }
         
         .hint-overlay {
-            position: fixed; bottom: 30px; right: 30px;
-            background: rgba(255,255,255,0.95); padding: 15px;
-            border-radius: var(--radius-medium); font-size: 12px; color: var(--text-secondary);
-            border: 1px solid var(--border-color); pointer-events: none;
-            line-height: 1.6; z-index: 1000; box-shadow: var(--shadow-medium);
-            backdrop-filter: blur(5px);
+            position: absolute; bottom: 20px; right: 20px;
+            background: rgba(248, 245, 238, 0.95); padding: 12px;
+            border-radius: var(--radius-medium); font-size: 11px; color: var(--oxford-navy);
+            border: 1px solid var(--oxford-navy-dark); pointer-events: none;
+            line-height: 1.5; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         
         #apparatus-drawer {
-            position: fixed; top: 0; right: -420px; width: 380px; height: 100vh;
-            background: var(--accent-bg); box-shadow: -10px 0 30px rgba(0,0,0,0.1);
-            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 2000; display: flex; flex-direction: column;
-            border-left: 1px solid var(--border-color);
+            position: fixed; top: 0; right: -400px; width: 380px; height: 100vh;
+            background: var(--oxford-navy); box-shadow: -5px 0 25px rgba(0,0,0,0.3);
+            transition: right 0.3s ease; z-index: 2000; display: flex; flex-direction: column;
+            border-left: 1px solid var(--oxford-navy-dark);
         }
         #apparatus-drawer.open { right: 0; }
-        .apparatus-header { padding: 30px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: #fdfdfd; }
-        .apparatus-header h3 { margin: 0; color: var(--text-primary); font-family: Georgia, serif; font-size: 22px; }
-        .close-btn { background: none; border: none; font-size: 30px; cursor: pointer; color: #b0b0b0; }
+        .apparatus-header { padding: 25px; border-bottom: 1px solid var(--oxford-navy-dark); display: flex; justify-content: space-between; align-items: center; background: var(--oxford-navy-dark); }
+        .apparatus-header h3 { color: var(--oxford-cream); margin: 0; }
+        .apparatus-content { padding: 25px; overflow-y: auto; flex-grow: 1; position: relative; }
         
         .ms-card {
-            border: 1px solid var(--border-color); border-radius: var(--radius-small);
-            padding: 18px; margin-bottom: 18px; background: #fff; position: relative;
-            box-shadow: var(--shadow-subtle);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-small);
+            padding: 15px; margin-bottom: 15px; background: rgba(255,255,255,0.03); 
+            position: relative; color: var(--oxford-cream);
         }
+        .ms-symbol { color: var(--oxford-gold); font-weight: bold; font-family: Georgia, serif; font-size: 20px; }
+        .ms-date { font-size: 11px; color: #aaa; text-transform: uppercase; }
+        .ms-reading { font-family: Georgia, serif; font-style: italic; margin-top: 8px; }
         
         #context-menu {
-            position: fixed; display: none; background: #fff; border: 1px solid var(--border-color);
-            border-radius: var(--radius-small); box-shadow: var(--shadow-medium);
+            position: fixed; display: none; background: var(--oxford-cream); border: 1px solid var(--oxford-navy-dark);
+            border-radius: var(--radius-small); box-shadow: 0 5px 15px rgba(0,0,0,0.2);
             z-index: 5000; padding: 5px 0; min-width: 160px;
         }
-        .context-item {
-            padding: 10px 20px; font-size: 13px; cursor: pointer; color: var(--text-primary);
-            transition: background 0.1s; border-bottom: 1px solid #f9f9f9;
-        }
-        .context-item:last-child { border-bottom: none; }
-        .context-item:hover { background: var(--bg-main); color: var(--blue); }
-        .context-header { padding: 8px 20px; font-size: 10px; font-weight: bold; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
+        .context-item { padding: 8px 20px; font-size: 13px; cursor: pointer; color: var(--oxford-navy); transition: 0.1s; font-weight: bold; }
+        .context-item:hover { background: #e8e2d2; }
+        .context-header { padding: 6px 20px; font-size: 10px; font-weight: bold; color: var(--oxford-crimson); text-transform: uppercase; }
 
-        #variant-modal {
-            display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(255,255,255,0.98); z-index: 3000; padding: 30px;
-            flex-direction: column; gap: 15px;
-        }
-        #variant-modal.active { display: flex; }
-        
-        .proj-card {
-            display:flex; justify-content:space-between; align-items:center;
-            background:#fff; padding:12px 15px; border:1px solid var(--border-color);
-            border-radius:var(--radius-small); cursor:pointer; transition:0.15s;
-        }
-        .proj-card:hover { border-color: var(--blue); }
-        
         .floating-card {
-            background: #fff; padding: 10px; border-radius: var(--radius-medium);
-            border: 1px solid var(--border-color); box-shadow: var(--shadow-subtle);
+            background: var(--oxford-cream); padding: 8px; border-radius: var(--radius-medium);
+            border: 1px solid var(--oxford-navy-dark);
         }
+
+        #variant-modal { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(27, 38, 59, 0.95); z-index: 3000; padding: 25px; flex-direction: column; gap: 10px; }
+        #variant-modal h4 { color: var(--oxford-gold); margin: 0 0 10px 0; font-size: 18px; }
+        #variant-modal.active { display: flex; }
+        .proj-card { display:flex; justify-content:space-between; align-items:center; background:var(--oxford-cream); padding:10px 15px; border:1px solid var(--oxford-navy-dark); border-radius:var(--radius-small); cursor:pointer; margin-bottom:8px; font-size:12px; color: var(--oxford-navy); font-weight: bold;}
+        .proj-card:hover { border-color: var(--oxford-gold); }
     </style>
 </head>
 <body>
@@ -146,24 +147,19 @@
     <div class="sidebar-inner">
         <h2>Σyntaxis<span class="ix">IX</span></h2>
         
-        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px; margin-bottom: 20px;">
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
             <input type="text" id="projectName" placeholder="Diagram Name" oninput="autoSave()">
             <div style="display: flex; gap: 8px;">
                 <input type="text" id="verseReference" placeholder="Ref (e.g. Col 1)" oninput="autoSave()" style="flex:1;">
-                <button class="std-btn" onclick="saveToApp()" style="background:var(--orange); color:white; flex-shrink:0;">Save App</button>
+                <button class="std-btn" onclick="saveToApp()" style="background:var(--oxford-gold); color:var(--oxford-navy); flex-shrink:0;">Save App</button>
             </div>
         </div>
 
-        <textarea id="passageInput" placeholder="Paste passage here..." oninput="updateWordBank(); autoSave();"></textarea>
-        <div id="word-bank"></div>
-        
         <div class="palette">
             <div class="tool" onclick="addShape('subject_baseline')"><svg viewBox="0 0 100 100"><line x1="10" y1="50" x2="90" y2="50"/><line x1="50" y1="35" x2="50" y2="65"/></svg>Subject</div>
             <div class="tool" onclick="addShape('direct_object')"><svg viewBox="0 0 100 100"><polyline points="30,20 30,70 80,70"/></svg>Direct Obj.</div>
             <div class="tool" onclick="addShape('modifier')"><svg viewBox="0 0 100 100"><polyline points="30,20 50,70 95,70"/></svg>Modifier</div>
-            
             <div class="tool" onclick="addShape('appositive')"><svg viewBox="0 0 100 100"><polyline points="30,20 30,70 80,70"/></svg>Participle</div>
-            
             <div class="tool" onclick="addShape('x_line')"><svg viewBox="0 0 100 100"><line x1="30" y1="30" x2="70" y2="70"/><line x1="70" y1="30" x2="30" y2="70"/></svg>Understood (X)</div>
             <div class="tool" onclick="addShape('diamond')"><svg viewBox="0 0 100 100"><path d="M5,50 L25,50 L45,20 L75,20 L95,50 L75,80 L45,80 L25,50 M45,20 L45,80 M75,20 L75,80"/></svg>Compound</div>
             <div class="tool" onclick="addShape('stilt')"><svg viewBox="0 0 100 100"><line x1="10" y1="30" x2="90" y2="30"/><line x1="50" y1="30" x2="50" y2="60"/><path d="M30,90 L50,60 L70,90"/></svg>Platform Stilt</div>
@@ -172,40 +168,57 @@
             
             <div class="tool" onclick="addShape('single_line')"><svg viewBox="0 0 100 100"><line x1="20" y1="80" x2="80" y2="20"/></svg>Single Line</div>
             <div class="tool" onclick="addShape('text')"><strong style="font-size:20px;">Label</strong></div>
-            <button class="std-btn" onclick="flipSelected()" style="background:#fff; color:var(--text-primary); border:1px solid var(--border-color); grid-column: span 1; box-shadow: 0 2px 4px rgba(0,0,0,0.03);">Flip (F)</button>
+            <button class="std-btn" onclick="flipSelected()" style="background:var(--oxford-navy-dark); color:var(--oxford-cream); grid-column: span 1;">Flip (F)</button>
             
-            <button class="std-btn" onclick="elements=[]; selectedElements=[]; draw(); autoSave();" style="background:var(--red); color:white; grid-column: span 3; margin-top:10px;">Clear Canvas</button>
+            <button class="std-btn" onclick="elements=[]; selectedElements=[]; draw(); autoSave();" style="background:var(--oxford-crimson); color:white; grid-column: span 3; margin-top:5px;">Clear Canvas</button>
 
-            <div class="palette floating-card" style="margin-top: 15px; grid-column: span 3; align-items: center; justify-content: space-between; gap: 8px;">
-                <button id="snapToggle" onclick="toggleSnap()" title="Toggle Grid Snap" style="cursor:pointer; padding:5px 8px; border:1px solid var(--border-color); border-radius:var(--radius-small); background:#a9dfbf; font-weight:bold; font-size:16px;">🧲</button>
-                <input type="color" id="styleColor" value="#333333" title="Color" onchange="applyStyle('color', this.value)" style="width:30px; height:30px; cursor:pointer; padding:0; border:none; background:transparent;">
-                <input type="number" id="styleWeight" value="2.5" step="0.5" min="1" max="10" title="Weight" onchange="applyStyle('thickness', parseFloat(this.value))" style="width: 50px; height:30px; border:1px solid var(--border-color); border-radius:var(--radius-small);">
-                <button onclick="applyStyle('bold', true)" title="Bold" style="cursor:pointer; font-weight:bold; font-family:serif; font-style:italic; font-size:15px; padding:4px 10px; border:1px solid var(--border-color); border-radius:var(--radius-small); background:#fff;">B</button>
-                <button onclick="toggleApparatus()" title="Critical Apparatus" style="cursor:pointer; padding:5px 10px; border:1px solid var(--border-color); border-radius:var(--radius-small); background:#fff; font-weight:bold; color:var(--text-primary); font-size:13px;">📜 Text</button>
-                <button onclick="setZoom(-0.1)" title="Zoom Out" style="cursor:pointer; padding:4px 8px; border:1px solid var(--border-color); border-radius:var(--radius-small); background:#fff; font-size:16px;">-</button>
-                <button onclick="setZoom(0.1)" title="Zoom In" style="cursor:pointer; padding:4px 8px; border:1px solid var(--border-color); border-radius:var(--radius-small); background:#fff; font-size:16px;">+</button>
+            <div class="palette floating-card" style="margin-top: 10px; grid-column: span 3; align-items: center; justify-content: space-between; gap: 5px;">
+                <button id="snapToggle" onclick="toggleSnap()" style="cursor:pointer; padding:5px; border-radius:var(--radius-small); background:#a9dfbf; border:1px solid var(--oxford-navy-dark); font-weight:bold;">🧲</button>
+                <input type="color" id="styleColor" oninput="applyStyle('color', this.value)" style="width:25px; height:25px; padding:0; border:none; background:transparent; cursor:pointer;">
+                <input type="number" id="styleWeight" value="2.5" step="0.5" oninput="applyStyle('thickness', parseFloat(this.value))" style="width: 40px; height:25px; border:1px solid var(--oxford-navy-dark); border-radius:var(--radius-small); background:#fff; color:var(--oxford-navy); font-weight:bold;">
+                <button onclick="applyStyle('bold', true)" style="cursor:pointer; font-weight:bold; font-family:serif; font-style:italic; padding:4px 8px; border:1px solid var(--oxford-navy-dark); border-radius:var(--radius-small); background:#fff; color:var(--oxford-navy);">B</button>
+                <button onclick="toggleApparatus()" style="cursor:pointer; padding:5px 8px; border:1px solid var(--oxford-navy-dark); border-radius:var(--radius-small); background:#fff; font-weight:bold; font-size:12px; color:var(--oxford-navy);">📜 Text</button>
+                <button onclick="setZoom(-0.1)" style="cursor:pointer; padding:4px 8px; border:1px solid var(--oxford-navy-dark); border-radius:var(--radius-small); background:#fff; color:var(--oxford-navy); font-weight:bold;">-</button>
+                <button onclick="setZoom(0.1)" style="cursor:pointer; padding:4px 8px; border:1px solid var(--oxford-navy-dark); border-radius:var(--radius-small); background:#fff; color:var(--oxford-navy); font-weight:bold;">+</button>
             </div>
 
-            <div class="floating-card" style="display: flex; gap: 8px; margin-top: 10px; grid-column: span 3; padding: 10px;">
-                <button class="std-btn" onclick="exportImage()" style="flex:1; background:var(--green); color:white; font-size:11px;">PNG</button>
-                <button class="std-btn" onclick="saveProject()" style="flex:1; background:var(--blue); color:white; font-size:11px;">Save</button>
-                <button class="std-btn" onclick="triggerLoad()" style="flex:1; background:#9b59b6; color:white; font-size:11px;">Load</button>
+            <div class="floating-card" style="display: flex; gap: 5px; margin-top: 5px; grid-column: span 3;">
+                <button class="std-btn" onclick="exportImage()" style="flex:1; background:var(--oxford-navy-dark); color:var(--oxford-cream);">PNG</button>
+                <button class="std-btn" onclick="saveProject()" style="flex:1; background:var(--oxford-gold); color:var(--oxford-navy);">Save</button>
+                <button class="std-btn" onclick="triggerLoad()" style="flex:1; background:var(--oxford-crimson); color:white;">Load</button>
                 <input type="file" id="fileInput" style="display:none;" onchange="fallbackLoad(event)">
             </div>
         </div>
         
-        <div style="margin-top: 25px; border-top: 1px solid var(--border-color); padding-top: 25px;">
-            <h3 style="margin:0 0 10px 0; font-size:14px; color:var(--text-secondary); text-transform:uppercase; letter-spacing:1px; font-weight:bold;">Projects</h3>
-            <div id="project-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
+        <div style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+            <h3>Saved Projects</h3>
+            <div id="project-list"></div>
         </div>
     </div>
 </div>
 
+<div id="canvas-viewport">
+    <canvas id="mainCanvas"></canvas>
+    <div class="hint-overlay">
+        Pro Scaling Active | Right-Click <b>Line</b> tool for styles.<br>
+        F: Flip | Group (G) to lock syntax | Shift+Arrows to Sprint.<br>
+        <i>Drag Line handles to auto-snap to horizontal/vertical axes.</i>
+    </div>
+</div>
+
+<div id="right-sidebar">
+    <div class="right-inner">
+        <h3>Text Source</h3>
+        <textarea id="passageInput" placeholder="Paste passage here..." oninput="updateWordBank(); autoSave();"></textarea>
+        <div id="word-bank"></div>
+    </div>
+</div>
+
 <div id="context-menu">
-    <div class="context-header">Line Alignment</div>
+    <div class="context-header">Alignment</div>
     <div class="context-item" onclick="snapLine('horizontal')">Snap Horizontal</div>
     <div class="context-item" onclick="snapLine('vertical')">Snap Vertical</div>
-    <div class="context-header" style="margin-top:5px;">Line Style</div>
+    <div class="context-header" style="margin-top:5px;">Style</div>
     <div class="context-item" onclick="setLineStyle('solid')">Solid Line</div>
     <div class="context-item" onclick="setLineStyle('dashed')">Dashed Line</div>
     <div class="context-item" onclick="setLineStyle('dotted')">Dotted Line</div>
@@ -215,23 +228,15 @@
     <div class="apparatus-header"><h3>Apparatus</h3><button class="close-btn" onclick="toggleApparatus()">&times;</button></div>
     <div class="apparatus-content">
         <div id="apparatus-list"></div>
-        <button onclick="openVariantModal()" style="width: 100%; margin-top: 10px; padding: 12px; background: #fafafa; border: 1px dashed #ccc; border-radius: 8px; cursor: pointer; color: #888; font-weight: bold;">+ Add Manuscript</button>
-        <button onclick="launchCNTR()" style="width: 100%; margin-top: 30px; padding: 12px; background: var(--text-primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Verify on CNTR ↗</button>
+        <button onclick="openVariantModal()" style="width: 100%; margin-top: 10px; padding: 12px; background: transparent; border: 1px dashed var(--oxford-gold); border-radius: 8px; cursor: pointer; color: var(--oxford-gold); font-weight: bold;">+ Add MS Reading</button>
+        <button onclick="launchCNTR()" style="width: 100%; margin-top: 20px; padding: 12px; background: var(--oxford-gold); color: var(--oxford-navy); border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Verify on CNTR ↗</button>
         <div id="variant-modal">
-            <h4>Add MS</h4>
-            <input type="text" id="v-symbol" placeholder="Symbol">
+            <h4>Add Manuscript</h4>
+            <input type="text" id="v-symbol" placeholder="Symbol (e.g. א)">
             <input type="text" id="v-date" placeholder="Date">
             <textarea id="v-reading" placeholder="Reading..."></textarea>
-            <div style="display:flex; gap:10px;"><button class="std-btn" onclick="closeVariantModal()" style="flex:1; background:#eee;">Cancel</button><button class="std-btn" onclick="saveVariant()" style="flex:1; background:var(--blue); color:white;">Save</button></div>
+            <div style="display:flex; gap:10px;"><button class="std-btn" onclick="closeVariantModal()" style="flex:1; background:var(--oxford-navy-dark); color:var(--oxford-cream);">Cancel</button><button class="std-btn" onclick="saveVariant()" style="flex:1; background:var(--oxford-gold); color:var(--oxford-navy);">Save</button></div>
         </div>
-    </div>
-</div>
-
-<div id="canvas-viewport">
-    <canvas id="mainCanvas"></canvas>
-    <div class="hint-overlay">
-        Pro Scaling Mode | Right-Click <b>Line</b> for style & snap options.<br>
-        Shift+Arrows to Sprint | F to Flip | Group (G) to lock syntax trees.
     </div>
 </div>
 
@@ -260,12 +265,8 @@
             const distToEnd = Math.hypot((el.x + el.w * el.flip) - mx, (el.y + el.h) - my);
             return distToStart < 40 || distToEnd < 40;
         });
-        if (clicked) {
-            rightClickedEl = clicked;
-            ctxMenu.style.display = 'block';
-            ctxMenu.style.left = e.clientX + 'px';
-            ctxMenu.style.top = e.clientY + 'px';
-        } else { ctxMenu.style.display = 'none'; }
+        if (clicked) { rightClickedEl = clicked; ctxMenu.style.display = 'block'; ctxMenu.style.left = e.clientX + 'px'; ctxMenu.style.top = e.clientY + 'px'; }
+        else { ctxMenu.style.display = 'none'; }
     };
 
     window.onclick = () => { ctxMenu.style.display = 'none'; };
@@ -278,7 +279,7 @@
         const match = textToParse.match(/(1\s*|2\s*|3\s*)?([a-zA-Z]+)[\s\.]*(\d+)(?:[\s:]+(\d+))?/);
         if(!match) { window.open("https://greekcntr.org", "_blank"); return; }
         const bookName = (match[1] ? match[1].replace(/\s+/g, '') : '') + match[2].toLowerCase();
-        const ntBooks = {"matthew":40,"matt":40,"mt":40,"mark":41,"mk":41,"luke":42,"lk":42,"john":43,"jhn":43,"jn":43,"acts":44,"romans":45,"rom":45,"1corinthians":46,"1cor":46,"2corinthians":47,"2cor":47,"galatians":48,"gal":48,"ephesians":49,"eph":49,"philippians":50,"phil":50,"colossians":51,"col":51,"1thessalonians":52,"1th":52,"2thessalonians":53,"2th":53,"1timothy":54,"1ti":54,"2timothy":55,"2ti":55,"titus":56,"tit":56,"philemon":57,"phm":57,"hebrews":58,"heb":58,"james":59,"jas":59,"1peter":60,"1pet":60,"2peter":61,"2pet":61,"1john":62,"1jn":62,"2john":63,"2jn":63,"3john":64,"3jn":64,"jude":65,"jud":65,"revelation":66,"rev":66};
+        const ntBooks = {"matthew":40,"matt":40,"mt":40,"mark":41,"mk":41,"luke":42,"lk":42,"john":43,"jhn":43,"jn":43,"acts":44,"romans":45,"rom":45,"1corinthians":46,"1cor":46,"2corinthians":47,"2cor":47,"galatians":48,"gal":48,"ephesians":49,"eph":49,"philippians":50,"phil":50,"php":50,"colossians":51,"col":51,"1thessalonians":52,"1th":52,"2thessalonians":53,"2th":53,"1timothy":54,"1ti":54,"2timothy":55,"2ti":55,"titus":56,"tit":56,"philemon":57,"phm":57,"hebrews":58,"heb":58,"james":59,"jas":59,"1peter":60,"1pet":60,"2peter":61,"2pet":61,"1john":62,"1jn":62,"2john":63,"2jn":63,"3john":64,"3jn":64,"jude":65,"jud":65,"revelation":66,"rev":66};
         if (ntBooks[bookName]) { window.open(`https://greekcntr.org/collation/index.htm?${ntBooks[bookName]}${parseInt(match[3]).toString().padStart(3,'0')}${(match[4]?parseInt(match[4]):1).toString().padStart(3,'0')}`, "_blank"); }
         else window.open("https://greekcntr.org", "_blank");
     }
@@ -301,10 +302,10 @@
     window.addEventListener('DOMContentLoaded', () => { try { const saved = sessionStorage.getItem('syntaxis_autosave'); if (saved) { const d = JSON.parse(saved); elements = d.elements||[]; apparatusData = d.apparatus||[]; document.getElementById('passageInput').value=d.passage||""; document.getElementById('projectName').value=d.projectName||""; document.getElementById('verseReference').value=d.verseReference||""; updateWordBank(); } } catch(e){} updateProjectList(); renderApparatus(); draw(); });
     function saveToApp() { const name = document.getElementById('projectName').value.trim() || prompt("Project Name:"); if(!name) return; const projects = JSON.parse(localStorage.getItem('syntaxis_projects') || '{}'); projects[name] = { passage: document.getElementById('passageInput').value, elements, apparatus: apparatusData, verseReference: document.getElementById('verseReference').value }; localStorage.setItem('syntaxis_projects', JSON.stringify(projects)); updateProjectList(); autoSave(); }
     function loadFromApp(name) { const projects = JSON.parse(localStorage.getItem('syntaxis_projects') || '{}'); if (projects[name]) { elements = projects[name].elements; apparatusData = projects[name].apparatus||[]; document.getElementById('passageInput').value = projects[name].passage; document.getElementById('projectName').value = name; document.getElementById('verseReference').value = projects[name].verseReference; updateWordBank(); selectedElements = []; draw(); renderApparatus(); autoSave(); } }
-    function updateProjectList() { const listDiv = document.getElementById('project-list'); listDiv.innerHTML = ''; const projects = JSON.parse(localStorage.getItem('syntaxis_projects') || '{}'); Object.keys(projects).forEach(name => { listDiv.innerHTML += `<div class="proj-card" onclick="loadFromApp('${name}')"><span class="proj-name">${name}</span></div>`; }); }
+    function updateProjectList() { const listDiv = document.getElementById('project-list'); listDiv.innerHTML = ''; const projects = JSON.parse(localStorage.getItem('syntaxis_projects') || '{}'); Object.keys(projects).forEach(name => { listDiv.innerHTML += `<div class="proj-card" onclick="loadFromApp('${name}')"><span>${name}</span></div>`; }); }
 
     function applyStyle(prop, val) { selectedElements.forEach(el => { if (prop === 'bold' && el.type === 'text') el.bold = !el.bold; else el[prop] = val; }); draw(); autoSave(); }
-    function setZoom(delta) { zoomLevel = Math.max(0.2, Math.min(3, zoomLevel + delta)); canvas.style.transform = `scale(${zoomLevel})`; canvas.style.transformOrigin = 'top left'; document.getElementById('zoomLabel').innerText = Math.round(zoomLevel * 100) + '%'; }
+    function setZoom(delta) { zoomLevel = Math.max(0.2, Math.min(3, zoomLevel + delta)); canvas.style.transform = `scale(${zoomLevel})`; canvas.style.transformOrigin = 'top left'; }
     function toggleSnap() { snapEnabled = !snapEnabled; document.getElementById('snapToggle').style.background = snapEnabled ? '#a9dfbf' : '#fff'; }
     function updateWordBank() { const words = document.getElementById('passageInput').value.split(/\s+/).filter(w => w.length > 0); bank.innerHTML = ''; words.forEach(word => { const span = document.createElement('span'); span.className = 'bank-word'; span.innerText = word; span.draggable = true; span.onclick = () => span.classList.toggle('selected'); span.ondragstart = (e) => { const sel = Array.from(document.querySelectorAll('.bank-word.selected')); e.dataTransfer.setData("text/plain", sel.length > 0 ? sel.map(s => s.innerText).join(' ') : word); }; bank.appendChild(span); }); }
     canvas.ondragover = e => e.preventDefault();
@@ -325,27 +326,52 @@
         elements.forEach(el => {
             const f = el.flip;
             if (el.type === 'single_line') { if (Math.hypot(el.x - mx, el.y - my) < 30) { targetEl = el; targetPoint = 'line_start'; } else if (Math.hypot((el.x + el.w * f) - mx, (el.y + el.h) - my) < 30) { targetEl = el; targetPoint = 'line_end'; } }
-            else if (el.type !== 'prep_shelf' && el.type !== 'text' && Math.hypot(el.x + (el.w * f) - mx, el.y + el.h - my) < 25 / zoomLevel) { targetEl = el; targetPoint = 'default'; }
             else if (el.type === 'prep_shelf') { if (Math.hypot(el.x + (el.dx_top * f) - mx, el.y + el.dy_top - my) < 25 / zoomLevel) { targetEl = el; targetPoint = 'prep_top'; } else if (Math.hypot(el.x + (el.w * f) - mx, el.y - my) < 25 / zoomLevel) { targetEl = el; targetPoint = 'prep_bottom'; } }
+            else if (el.type === 'appositive' || el.type === 'direct_object') { if (Math.hypot(el.x - mx, (el.y - el.h) - my) < 25 / zoomLevel) { targetEl = el; targetPoint = 'height'; } else if (Math.hypot((el.x + el.w * f) - mx, el.y - my) < 25 / zoomLevel) { targetEl = el; targetPoint = 'width'; } }
+            else if (el.type !== 'text' && el.type !== 'x_line' && Math.hypot(el.x + (el.w * f) - mx, el.y + el.h - my) < 25 / zoomLevel) { targetEl = el; targetPoint = 'default'; }
         });
-        if (targetEl) { isResizing = true; selectedElements = [targetEl]; currentResizePoint = targetPoint; draw(); return; }
+        if (targetEl) { 
+            isResizing = true; selectedElements = [targetEl]; currentResizePoint = targetPoint; 
+            document.getElementById('styleColor').value = targetEl.color || '#333333';
+            document.getElementById('styleWeight').value = targetEl.thickness || 2.5;
+            draw(); return; 
+        }
         const clickedText = elements.find(el => el.type === 'text' && Math.abs(el.x - mx) < 60 && Math.abs(el.y - my) < 25);
         const clickedShape = elements.find(el => { if(el.type === 'text') return false; return Math.abs(el.y - my) < 30 && mx > Math.min(el.x, el.x + (el.w*el.flip)) - 20 && mx < Math.max(el.x, el.x + (el.w*el.flip)) + 20; });
-        if (clickedText || clickedShape) { const clicked = clickedText || clickedShape; if (!selectedElements.includes(clicked)) { selectedElements = clicked.group ? elements.filter(el => el.group === clicked.group) : [clicked]; } isDragging = true; dragOffset.x = mx; dragOffset.y = my; }
+        if (clickedText || clickedShape) { 
+            const clicked = clickedText || clickedShape; 
+            if (!selectedElements.includes(clicked)) { selectedElements = clicked.group ? elements.filter(el => el.group === clicked.group) : [clicked]; } 
+            isDragging = true; dragOffset.x = mx; dragOffset.y = my; 
+            document.getElementById('styleColor').value = clicked.color || '#333333';
+            document.getElementById('styleWeight').value = clicked.thickness || 2.5;
+        }
         else { isMarquee = true; marqueeStart = {x: mx, y: my}; selectedElements = []; }
         draw();
     };
+    
     window.onmousemove = (e) => {
         const rect = canvas.getBoundingClientRect(); const mx = (e.clientX - rect.left) / zoomLevel; const my = (e.clientY - rect.top) / zoomLevel;
         if (isResizing) {
             const el = selectedElements[0], f = el.flip;
-            if (el.type === 'single_line') { if (currentResizePoint === 'line_start') { el.x = snapEnabled ? Math.round(mx/10)*10 : mx; el.y = snapEnabled ? Math.round(my/10)*10 : my; } else { el.w = (snapEnabled ? Math.round(mx/10)*10 : mx) - el.x; el.h = (snapEnabled ? Math.round(my/10)*10 : my) - el.y; } }
+            if (el.type === 'single_line') { 
+                let tx = snapEnabled ? Math.round(mx/10)*10 : mx; let ty = snapEnabled ? Math.round(my/10)*10 : my;
+                if (currentResizePoint === 'line_start') { 
+                    let ex = el.x + (el.w * f), ey = el.y + el.h;
+                    if (snapEnabled) { if (Math.abs(ty - ey) <= 20) ty = ey; if (Math.abs(tx - ex) <= 20) tx = ex; }
+                    el.x = tx; el.y = ty; el.w = (ex - tx) / f; el.h = ey - ty;
+                } else { 
+                    if (snapEnabled) { if (Math.abs(ty - el.y) <= 20) ty = el.y; if (Math.abs(tx - el.x) <= 20) tx = el.x; }
+                    el.w = (tx - el.x) / f; el.h = ty - el.y; 
+                } 
+            }
             else if (el.type === 'prep_shelf') { if (currentResizePoint === 'prep_top') { el.dx_top = snapEnabled ? Math.round(((mx - el.x) * f) / 10) * 10 : (mx - el.x) * f; el.dy_top = snapEnabled ? Math.round((my - el.y) / 10) * 10 : my - el.y; } else { el.w = Math.max(20, snapEnabled ? Math.round(((mx - el.x) * f) / 10) * 10 : (mx - el.x) * f); } }
+            else if (el.type === 'appositive' || el.type === 'direct_object') { if (currentResizePoint === 'height') { el.h = Math.max(10, el.y - (snapEnabled ? Math.round(my/10)*10 : my)); } else { el.w = Math.max(20, snapEnabled ? Math.round(((mx - el.x) * f) / 10) * 10 : (mx - el.x) * f); } }
             else { el.w = Math.max(20, snapEnabled ? Math.round(((mx - el.x) * f) / 10) * 10 : (mx - el.x) * f); el.h = Math.max(10, snapEnabled ? Math.round((my - el.y) / 10) * 10 : my - el.y); }
         } else if (isDragging) { const dx = mx - dragOffset.x, dy = my - dragOffset.y; selectedElements.forEach(el => { el.x += dx; el.y += dy; }); dragOffset.x = mx; dragOffset.y = my; }
         else if (isMarquee) { marqueeEnd = {x: mx, y: my}; const xMin = Math.min(marqueeStart.x, marqueeEnd.x), xMax = Math.max(marqueeStart.x, marqueeEnd.x), yMin = Math.min(marqueeStart.y, marqueeEnd.y), yMax = Math.max(marqueeStart.y, marqueeEnd.y); selectedElements = elements.filter(el => el.x > xMin && el.x < xMax && el.y > yMin && el.y < yMax); }
         draw();
     };
+    
     window.onmouseup = () => { if (isDragging && snapEnabled) { selectedElements.forEach(el => { el.x = Math.round(el.x / 10) * 10; el.y = Math.round(el.y / 10) * 10; }); } if (isDragging || isResizing || isMarquee) autoSave(); isDragging = isResizing = isMarquee = false; draw(); };
     window.onkeydown = (e) => { if(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return; const k = e.key.toLowerCase(); if (k === 'g') { const gid = Date.now(); selectedElements.forEach(el => el.group = gid); } else if (k === 'u') { selectedElements.forEach(el => el.group = null); } else if (k === 'f') flipSelected(); else if (e.key === 'Delete' || e.key === 'Backspace') { elements = elements.filter(el => !selectedElements.includes(el)); selectedElements = []; } else if (e.key.startsWith('Arrow')) { const n = e.shiftKey ? 10 : 2; if (e.key === 'ArrowUp') selectedElements.forEach(el => el.y -= n); else if (e.key === 'ArrowDown') selectedElements.forEach(el => el.y += n); else if (e.key === 'ArrowLeft') selectedElements.forEach(el => el.x -= n); else if (e.key === 'ArrowRight') selectedElements.forEach(el => el.x += n); } draw(); autoSave(); };
 
@@ -353,9 +379,15 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.strokeStyle = '#f5f5f5'; ctx.lineWidth = 1;
         for(let i=0; i<canvas.width; i+=40) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,canvas.height); ctx.stroke(); }
         for(let j=0; j<canvas.height; j+=40) { ctx.beginPath(); ctx.moveTo(0,j); ctx.lineTo(canvas.width,j); ctx.stroke(); }
+        
         elements.forEach(el => {
-            const isSel = selectedElements.includes(el), f = el.flip; ctx.beginPath(); ctx.strokeStyle = isSel ? '#3498db' : (el.color || '#333'); ctx.fillStyle = isSel ? '#3498db' : (el.color || '#333'); ctx.lineWidth = el.thickness || 2.5; 
+            const isSel = selectedElements.includes(el), f = el.flip; 
+            ctx.beginPath(); 
+            ctx.strokeStyle = el.color || '#333'; 
+            ctx.fillStyle = el.color || '#333'; 
+            ctx.lineWidth = el.thickness || 2.5; 
             ctx.font = `${el.bold ? "bold" : "normal"} italic 20px Georgia`;
+            
             if (el.lineStyle === 'dashed') ctx.setLineDash([10, 10]); else if (el.lineStyle === 'dotted') ctx.setLineDash([2, 6]); else ctx.setLineDash([]);
             if (el.type === 'subject_baseline') { ctx.moveTo(el.x - (el.w*f), el.y); ctx.lineTo(el.x + (el.w*f), el.y); ctx.moveTo(el.x, el.y - 30); ctx.lineTo(el.x, el.y + 30); }
             else if (el.type === 'direct_object' || el.type === 'appositive') { ctx.moveTo(el.x, el.y - el.h); ctx.lineTo(el.x, el.y); ctx.lineTo(el.x + (el.w*f), el.y); }
@@ -368,10 +400,26 @@
             else if (el.type === 'single_line') { ctx.moveTo(el.x, el.y); ctx.lineTo(el.x + (el.w * f), el.y + el.h); }
             else if (el.type === 'text') { ctx.setLineDash([]); ctx.fillText(el.val, el.x, el.y); }
             ctx.stroke(); ctx.setLineDash([]);
-            if (isSel && el.type !== 'text' && el.type !== 'x_line') {
-                ctx.fillStyle = '#3498db'; const hR = 6 / Math.sqrt(zoomLevel);
-                if (el.type === 'single_line') { ctx.beginPath(); ctx.arc(el.x, el.y, hR, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(el.x + (el.w * f), el.y + el.h, hR, 0, Math.PI*2); ctx.fill(); }
+            
+            if (isSel) {
+                ctx.fillStyle = '#3498db'; 
+                ctx.strokeStyle = '#3498db';
+                const hR = 6 / Math.sqrt(zoomLevel);
+                
+                if (el.type === 'text') {
+                    ctx.setLineDash([4, 4]); ctx.lineWidth = 1;
+                    const m = ctx.measureText(el.val);
+                    ctx.strokeRect(el.x - 4, el.y - 20, m.width + 8, 26);
+                    ctx.setLineDash([]);
+                }
+                else if (el.type === 'x_line') {
+                    ctx.setLineDash([4, 4]); ctx.lineWidth = 1;
+                    ctx.strokeRect(el.x - 35, el.y - 35, 70, 70);
+                    ctx.setLineDash([]);
+                }
+                else if (el.type === 'single_line') { ctx.beginPath(); ctx.arc(el.x, el.y, hR, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(el.x + (el.w * f), el.y + el.h, hR, 0, Math.PI*2); ctx.fill(); }
                 else if (el.type === 'prep_shelf') { ctx.beginPath(); ctx.arc(el.x + (el.dx_top * f), el.y + el.dy_top, hR, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(el.x + (el.w * f), el.y, hR, 0, Math.PI*2); ctx.fill(); }
+                else if (el.type === 'appositive' || el.type === 'direct_object') { ctx.beginPath(); ctx.arc(el.x, el.y - el.h, hR, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(el.x + (el.w * f), el.y, hR, 0, Math.PI*2); ctx.fill(); }
                 else { ctx.beginPath(); ctx.arc(el.x + (el.w*f), el.y + el.h, hR, 0, Math.PI*2); ctx.fill(); }
             }
         });
