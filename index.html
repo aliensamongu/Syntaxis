@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Σyntaxis Pro | Master Editor</title>
+    <title>Σyntaxis Pro</title>
     <style>
         :root {
             --sidebar-width: 380px;
@@ -91,14 +91,6 @@
         
         #canvas-viewport { flex-grow: 1; overflow: auto; position: relative; background: var(--bg-main); }
         canvas { background: #fff; display: block; cursor: crosshair; box-shadow: 0 0 20px rgba(0,0,0,0.05); }
-        
-        .hint-overlay {
-            position: absolute; bottom: 20px; right: 20px;
-            background: rgba(248, 245, 238, 0.95); padding: 12px;
-            border-radius: var(--radius-medium); font-size: 11px; color: var(--oxford-navy);
-            border: 1px solid var(--oxford-navy-dark); pointer-events: none;
-            line-height: 1.5; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
         
         #apparatus-drawer {
             position: fixed; top: 0; right: -400px; width: 380px; height: 100vh;
@@ -199,11 +191,6 @@
 
 <div id="canvas-viewport">
     <canvas id="mainCanvas"></canvas>
-    <div class="hint-overlay">
-        Pro Scaling Active | Right-Click <b>Line</b> tool for styles.<br>
-        F: Flip | Group (G) to lock syntax | Shift+Arrows to Sprint.<br>
-        <i>Drag Line handles to auto-snap to horizontal/vertical axes.</i>
-    </div>
 </div>
 
 <div id="right-sidebar">
