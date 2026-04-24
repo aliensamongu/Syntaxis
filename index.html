@@ -15,6 +15,7 @@
             --oxford-cream: #F8F5EE;
             --oxford-gold: #C5A059;
             --oxford-crimson: #8C1C13;
+            --rustic-orange: #C86428;
             
             --radius-small: 8px;
             --radius-medium: 12px;
@@ -46,14 +47,14 @@
         .ix { font-size: 14px; text-decoration: overline; margin-left: 4px; font-weight: bold; color: var(--oxford-gold); }
         h3 { margin: 0 0 10px 0; font-size: 13px; color: var(--oxford-gold); text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
 
-        input[type="text"], textarea {
+        input[type="text"], textarea, select {
             width: 100%; box-sizing: border-box; border-radius: var(--radius-small);
             border: 1px solid var(--oxford-navy-dark); padding: 10px;
             font-family: inherit; font-size: 13px; color: var(--oxford-navy);
             background: var(--oxford-cream); transition: 0.1s; outline: none;
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
         }
-        input[type="text"]:focus, textarea:focus { border-color: var(--oxford-gold); box-shadow: 0 0 0 2px rgba(197, 160, 89, 0.3); }
+        input[type="text"]:focus, textarea:focus, select:focus { border-color: var(--oxford-gold); box-shadow: 0 0 0 2px rgba(197, 160, 89, 0.3); }
         textarea { height: 120px; flex-shrink: 0; resize: none; line-height: 1.4; }
         
         #word-bank {
@@ -111,7 +112,19 @@
         .ms-symbol { color: var(--oxford-gold); font-weight: bold; font-family: Georgia, serif; font-size: 20px; }
         .ms-date { font-size: 11px; color: #aaa; text-transform: uppercase; }
         .ms-reading { font-family: Georgia, serif; font-style: italic; margin-top: 8px; }
-        
+
+        /* Conviction Badge CSS */
+        .ms-badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; color: var(--oxford-cream); margin-right: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .badge-highly { background: #3A4A63; } 
+        .badge-likely { background: var(--oxford-gold); color: var(--oxford-navy); }
+        .badge-possible { background: var(--rustic-orange); }
+        .badge-unlikely { background: var(--oxford-crimson); }
+
+        /* Quick-Key CSS */
+        .quick-keys { display: flex; gap: 5px; margin-bottom: 10px; }
+        .quick-key { flex: 1; background: var(--oxford-navy-dark); border: 1px solid var(--oxford-navy-dark); border-radius: 4px; cursor: pointer; padding: 6px 0; font-family: Georgia, serif; font-size: 16px; color: var(--oxford-cream); transition: 0.1s; text-align: center; }
+        .quick-key:hover { background: var(--oxford-gold); color: var(--oxford-navy); border-color: var(--oxford-gold); }
+
         #context-menu {
             position: fixed; display: none; background: var(--oxford-cream); border: 1px solid var(--oxford-navy-dark);
             border-radius: var(--radius-small); box-shadow: 0 5px 15px rgba(0,0,0,0.2);
@@ -131,6 +144,9 @@
         #variant-modal.active { display: flex; }
         .proj-card { display:flex; justify-content:space-between; align-items:center; background:var(--oxford-cream); padding:10px 15px; border:1px solid var(--oxford-navy-dark); border-radius:var(--radius-small); cursor:pointer; margin-bottom:8px; font-size:12px; color: var(--oxford-navy); font-weight: bold;}
         .proj-card:hover { border-color: var(--oxford-gold); }
+        
+        .resource-link { flex:1; padding: 10px; background: rgba(255,255,255,0.03); color: var(--oxford-cream); text-decoration: none; border-radius: var(--radius-small); font-size: 11px; text-align: center; border: 1px solid rgba(255,255,255,0.1); transition: 0.2s; font-weight: bold; }
+        .resource-link:hover { border-color: var(--oxford-gold); color: var(--oxford-gold); }
     </style>
 </head>
 <body>
@@ -142,7 +158,7 @@
         <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
             <input type="text" id="projectName" placeholder="Diagram Name" oninput="autoSave()">
             <div style="display: flex; gap: 8px;">
-                <input type="text" id="verseReference" placeholder="Ref (e.g. Col 1)" oninput="autoSave()" style="flex:1;">
+                <input type="text" id="verseReference" placeholder="Ref (e.g. 1Pet 3:18-21)" oninput="autoSave()" style="flex:1;">
                 <button class="std-btn" onclick="saveToApp()" style="background:var(--oxford-gold); color:var(--oxford-navy); flex-shrink:0;">Save App</button>
             </div>
         </div>
@@ -217,9 +233,37 @@
         <div id="apparatus-list"></div>
         <button onclick="openVariantModal()" style="width: 100%; margin-top: 10px; padding: 12px; background: transparent; border: 1px dashed var(--oxford-gold); border-radius: 8px; cursor: pointer; color: var(--oxford-gold); font-weight: bold;">+ Add MS Reading</button>
         <button onclick="launchCNTR()" style="width: 100%; margin-top: 20px; padding: 12px; background: var(--oxford-gold); color: var(--oxford-navy); border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Verify on CNTR ↗</button>
+        
+        <div style="margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+            <div style="font-size: 10px; color: var(--oxford-gold); text-transform: uppercase; font-weight: bold; letter-spacing: 1px; margin-bottom: 10px; text-align:center;">Free English Resources</div>
+            <div style="display:flex; gap:10px;">
+                <a href="https://netbible.org" target="_blank" class="resource-link">NET Bible ↗</a>
+                <a href="https://www.stepbible.org" target="_blank" class="resource-link">STEP Bible ↗</a>
+            </div>
+        </div>
+
         <div id="variant-modal">
             <h4>Add Manuscript</h4>
-            <input type="text" id="v-symbol" placeholder="Symbol (e.g. א)">
+            
+            <div class="quick-keys">
+                <button type="button" class="quick-key" onclick="insertSiglum('𝔓')">𝔓</button>
+                <button type="button" class="quick-key" onclick="insertSiglum('א')">א</button>
+                <button type="button" class="quick-key" onclick="insertSiglum('B')">B</button>
+                <button type="button" class="quick-key" onclick="insertSiglum('D')">D</button>
+                <button type="button" class="quick-key" onclick="insertSiglum('𝔪')">𝔪</button>
+            </div>
+            
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="v-symbol" placeholder="Symbol (e.g. א)" style="flex:1;">
+                <select id="v-conviction" style="flex:1;">
+                    <option value="">Conviction...</option>
+                    <option value="highly">Highly Likely</option>
+                    <option value="likely">Likely</option>
+                    <option value="possible">Possible</option>
+                    <option value="unlikely">Unlikely</option>
+                </select>
+            </div>
+            
             <input type="text" id="v-date" placeholder="Date">
             <textarea id="v-reading" placeholder="Reading..."></textarea>
             <div style="display:flex; gap:10px;"><button class="std-btn" onclick="closeVariantModal()" style="flex:1; background:var(--oxford-navy-dark); color:var(--oxford-cream);">Cancel</button><button class="std-btn" onclick="saveVariant()" style="flex:1; background:var(--oxford-gold); color:var(--oxford-navy);">Save</button></div>
@@ -263,26 +307,79 @@
     function launchCNTR() {
         let textToParse = document.getElementById('verseReference').value.trim() || document.getElementById('projectName').value.trim();
         if (!textToParse) return;
-        const match = textToParse.match(/(1\s*|2\s*|3\s*)?([a-zA-Z]+)[\s\.]*(\d+)(?:[\s:]+(\d+))?/);
+        
+        // Smarter parser that ignores hyphens but catches standard verse formats (e.g. 1Peter 3:18-21 or 1 Pet 3.18)
+        const match = textToParse.match(/(1\s*|2\s*|3\s*)?([a-zA-Z]+)[\s\.]*(\d+)(?:[\s:\.]+(\d+))?/);
         if(!match) { window.open("https://greekcntr.org", "_blank"); return; }
+        
         const bookName = (match[1] ? match[1].replace(/\s+/g, '') : '') + match[2].toLowerCase();
         const ntBooks = {"matthew":40,"matt":40,"mt":40,"mark":41,"mk":41,"luke":42,"lk":42,"john":43,"jhn":43,"jn":43,"acts":44,"romans":45,"rom":45,"1corinthians":46,"1cor":46,"2corinthians":47,"2cor":47,"galatians":48,"gal":48,"ephesians":49,"eph":49,"philippians":50,"phil":50,"php":50,"colossians":51,"col":51,"1thessalonians":52,"1th":52,"2thessalonians":53,"2th":53,"1timothy":54,"1ti":54,"2timothy":55,"2ti":55,"titus":56,"tit":56,"philemon":57,"phm":57,"hebrews":58,"heb":58,"james":59,"jas":59,"1peter":60,"1pet":60,"2peter":61,"2pet":61,"1john":62,"1jn":62,"2john":63,"2jn":63,"3john":64,"3jn":64,"jude":65,"jud":65,"revelation":66,"rev":66};
-        if (ntBooks[bookName]) { window.open(`https://greekcntr.org/collation/index.htm?${ntBooks[bookName]}${parseInt(match[3]).toString().padStart(3,'0')}${(match[4]?parseInt(match[4]):1).toString().padStart(3,'0')}`, "_blank"); }
-        else window.open("https://greekcntr.org", "_blank");
+        
+        if (ntBooks[bookName]) { 
+            // Injects the critical v= flag exactly as CNTR requires
+            window.open(`https://greekcntr.org/collation/index.htm?v=${ntBooks[bookName]}${parseInt(match[3]).toString().padStart(3,'0')}${(match[4]?parseInt(match[4]):1).toString().padStart(3,'0')}`, "_blank"); 
+        } else {
+            window.open("https://greekcntr.org", "_blank");
+        }
+    }
+
+    function insertSiglum(char) {
+        const input = document.getElementById('v-symbol');
+        input.value += char;
+        input.focus();
     }
 
     function toggleApparatus() { document.getElementById('apparatus-drawer').classList.toggle('open'); renderApparatus(); }
     function openVariantModal() { document.getElementById('variant-modal').classList.add('active'); }
     function closeVariantModal() { document.getElementById('variant-modal').classList.remove('active'); }
+    
     function saveVariant() {
-        const symbol = document.getElementById('v-symbol').value.trim(); const reading = document.getElementById('v-reading').value.trim();
+        const symbol = document.getElementById('v-symbol').value.trim(); 
+        const reading = document.getElementById('v-reading').value.trim();
+        const conviction = document.getElementById('v-conviction').value; 
+        
         if (!symbol || !reading) return;
-        apparatusData.push({ id: Date.now(), symbol, date: document.getElementById('v-date').value.trim(), reading });
-        closeVariantModal(); renderApparatus(); autoSave();
+        
+        let targetId = null;
+        let targetWord = null;
+        if (selectedElements.length === 1 && selectedElements[0].type === 'text') {
+            targetId = selectedElements[0].id;
+            targetWord = selectedElements[0].val;
+        }
+
+        apparatusData.push({ id: Date.now(), targetId, targetWord, symbol, conviction, date: document.getElementById('v-date').value.trim(), reading });
+        
+        document.getElementById('v-symbol').value = '';
+        document.getElementById('v-date').value = '';
+        document.getElementById('v-reading').value = '';
+        document.getElementById('v-conviction').value = ''; 
+
+        closeVariantModal(); renderApparatus(); autoSave(); draw();
     }
+    
     function renderApparatus() {
         const list = document.getElementById('apparatus-list'); list.innerHTML = '';
-        apparatusData.forEach(v => { list.innerHTML += `<div class="ms-card"><div class="ms-header"><div><span class="ms-symbol">${v.symbol}</span></div><span class="ms-date">${v.date}</span></div><div class="ms-reading">"${v.reading}"</div></div>`; });
+        
+        const labels = {
+            'highly': 'Highly Likely',
+            'likely': 'Likely',
+            'possible': 'Possible',
+            'unlikely': 'Unlikely'
+        };
+
+        apparatusData.forEach(v => { 
+            const targetHtml = v.targetWord ? `<span style="font-size:11px; color:var(--rustic-orange); margin-left:5px; font-style:italic;">(${v.targetWord})</span>` : '';
+            const badgeHtml = v.conviction ? `<span class="ms-badge badge-${v.conviction}">${labels[v.conviction]}</span>` : '';
+            
+            list.innerHTML += `
+            <div class="ms-card">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div><span class="ms-symbol">${v.symbol}</span>${targetHtml}</div>
+                    <div style="text-align:right;">${badgeHtml}<div class="ms-date" style="margin-top:3px;">${v.date}</div></div>
+                </div>
+                <div class="ms-reading">"${v.reading}"</div>
+            </div>`; 
+        });
     }
 
     function autoSave() { sessionStorage.setItem('syntaxis_autosave', JSON.stringify({ passage: document.getElementById('passageInput').value, elements, apparatus: apparatusData, projectName: document.getElementById('projectName').value, verseReference: document.getElementById('verseReference').value })); }
@@ -393,12 +490,17 @@
         }
         const clickedText = elements.find(el => el.type === 'text' && Math.abs(el.x - mx) < 60 && Math.abs(el.y - my) < 25);
         const clickedShape = elements.find(el => { if(el.type === 'text') return false; return Math.abs(el.y - my) < 30 && mx > Math.min(el.x, el.x + (el.w*el.flip)) - 20 && mx < Math.max(el.x, el.x + (el.w*el.flip)) + 20; });
+        
         if (clickedText || clickedShape) { 
             const clicked = clickedText || clickedShape; 
             if (!selectedElements.includes(clicked)) { selectedElements = clicked.group ? elements.filter(el => el.group === clicked.group) : [clicked]; } 
             isDragging = true; dragOffset.x = mx; dragOffset.y = my; 
             document.getElementById('styleColor').value = clicked.color || '#333333';
             document.getElementById('styleWeight').value = clicked.thickness || 2.5;
+
+            if (clickedText && apparatusData.some(v => v.targetId === clickedText.id)) {
+                document.getElementById('apparatus-drawer').classList.add('open');
+            }
         }
         else { isMarquee = true; marqueeStart = {x: mx, y: my}; selectedElements = []; }
         draw();
@@ -428,7 +530,7 @@
     };
     
     window.onmouseup = () => { if (isDragging && snapEnabled) { selectedElements.forEach(el => { el.x = Math.round(el.x / 10) * 10; el.y = Math.round(el.y / 10) * 10; }); } if (isDragging || isResizing || isMarquee) autoSave(); isDragging = isResizing = isMarquee = false; draw(); };
-    window.onkeydown = (e) => { if(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return; const k = e.key.toLowerCase(); if (k === 'g') { const gid = Date.now(); selectedElements.forEach(el => el.group = gid); } else if (k === 'u') { selectedElements.forEach(el => el.group = null); } else if (k === 'f') flipSelected(); else if (e.key === 'Delete' || e.key === 'Backspace') { elements = elements.filter(el => !selectedElements.includes(el)); selectedElements = []; updateWordBank(); } else if (e.key.startsWith('Arrow')) { const n = e.shiftKey ? 10 : 2; if (e.key === 'ArrowUp') selectedElements.forEach(el => el.y -= n); else if (e.key === 'ArrowDown') selectedElements.forEach(el => el.y += n); else if (e.key === 'ArrowLeft') selectedElements.forEach(el => el.x -= n); else if (e.key === 'ArrowRight') selectedElements.forEach(el => el.x += n); } draw(); autoSave(); };
+    window.onkeydown = (e) => { if(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return; const k = e.key.toLowerCase(); if (k === 'g') { const gid = Date.now(); selectedElements.forEach(el => el.group = gid); } else if (k === 'u') { selectedElements.forEach(el => el.group = null); } else if (k === 'f') flipSelected(); else if (e.key === 'Delete' || e.key === 'Backspace') { elements = elements.filter(el => !selectedElements.includes(el)); selectedElements = []; updateWordBank(); } else if (e.key.startsWith('Arrow')) { const n = e.shiftKey ? 10 : 2; if (e.key === 'ArrowUp') selectedElements.forEach(el => el.y -= n); else if (e.key === 'ArrowDown') selectedElements.forEach(el => el.y += n); else if (e.key === 'ArrowLeft') selectedElements.forEach(el => el.x -= n); else if (e.key === 'ArrowRight') selectedElements.forEach(el => el.x += n); } draw(); autoSave(); };
 
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.strokeStyle = '#f5f5f5'; ctx.lineWidth = 1;
@@ -453,7 +555,18 @@
             else if (el.type === 'diamond') { ctx.moveTo(el.x - 30, el.y); ctx.lineTo(el.x, el.y); ctx.lineTo(el.x + (el.w*0.3), el.y - el.h); ctx.lineTo(el.x + (el.w*0.7), el.y - el.h); ctx.lineTo(el.x + el.w, el.y); ctx.moveTo(el.x, el.y); ctx.lineTo(el.x + (el.w*0.3), el.y + el.h); ctx.lineTo(el.x + (el.w*0.7), el.y + el.h); ctx.lineTo(el.x + el.w, el.y); ctx.moveTo(el.x + (el.w*0.3), el.y - el.h); ctx.lineTo(el.x + (el.w*0.3), el.y + el.h); ctx.moveTo(el.x + (el.w*0.7), el.y - el.h); ctx.lineTo(el.x + (el.w*0.7), el.y + el.h); }
             else if (el.type === 'x_line') { ctx.moveTo(el.x - 30, el.y - 30); ctx.lineTo(el.x + 30, el.y + 30); ctx.moveTo(el.x + 30, el.y - 30); ctx.lineTo(el.x - 30, el.y + 30); }
             else if (el.type === 'single_line') { ctx.moveTo(el.x, el.y); ctx.lineTo(el.x + (el.w * f), el.y + el.h); }
-            else if (el.type === 'text') { ctx.setLineDash([]); ctx.fillText(el.val, el.x, el.y); }
+            else if (el.type === 'text') { 
+                ctx.setLineDash([]); ctx.fillText(el.val, el.x, el.y); 
+                
+                if (apparatusData.some(v => v.targetId === el.id)) {
+                    ctx.beginPath();
+                    ctx.arc(el.x + 6, el.y - 22, 3.5, 0, Math.PI * 2);
+                    ctx.fillStyle = 'var(--rustic-orange)';
+                    ctx.fill();
+                    ctx.fillStyle = el.color || '#333'; 
+                }
+            }
+            
             ctx.stroke(); ctx.setLineDash([]);
             
             if (isSel) {
