@@ -108,10 +108,18 @@
             border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-small);
             padding: 15px; margin-bottom: 15px; background: rgba(255,255,255,0.03); 
             position: relative; color: var(--oxford-cream);
+            transition: 0.2s;
         }
+        .ms-card:hover { border-color: rgba(197, 160, 89, 0.3); }
         .ms-symbol { color: var(--oxford-gold); font-weight: bold; font-family: Georgia, serif; font-size: 20px; }
         .ms-date { font-size: 11px; color: #aaa; text-transform: uppercase; }
         .ms-reading { font-family: Georgia, serif; font-style: italic; margin-top: 8px; }
+        
+        .edit-btn {
+            position: absolute; top: 12px; right: 12px; background: none; border: none; 
+            cursor: pointer; color: #aaa; transition: 0.2s; padding: 4px; border-radius: 4px;
+        }
+        .edit-btn:hover { color: var(--oxford-gold); background: rgba(255,255,255,0.05); }
 
         /* Conviction Badge CSS */
         .ms-badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; color: var(--oxford-cream); margin-right: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -145,7 +153,7 @@
         .proj-card { display:flex; justify-content:space-between; align-items:center; background:var(--oxford-cream); padding:10px 15px; border:1px solid var(--oxford-navy-dark); border-radius:var(--radius-small); cursor:pointer; margin-bottom:8px; font-size:12px; color: var(--oxford-navy); font-weight: bold;}
         .proj-card:hover { border-color: var(--oxford-gold); }
         
-        .resource-link { flex:1; padding: 10px; background: rgba(255,255,255,0.03); color: var(--oxford-cream); text-decoration: none; border-radius: var(--radius-small); font-size: 11px; text-align: center; border: 1px solid rgba(255,255,255,0.1); transition: 0.2s; font-weight: bold; }
+        .resource-link { flex:1; padding: 10px; background: rgba(255,255,255,0.03); color: var(--oxford-cream); border-radius: var(--radius-small); font-size: 11px; text-align: center; border: 1px solid rgba(255,255,255,0.1); transition: 0.2s; font-weight: bold; }
         .resource-link:hover { border-color: var(--oxford-gold); color: var(--oxford-gold); }
     </style>
 </head>
@@ -237,13 +245,13 @@
         <div style="margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
             <div style="font-size: 10px; color: var(--oxford-gold); text-transform: uppercase; font-weight: bold; letter-spacing: 1px; margin-bottom: 10px; text-align:center;">Free English Resources</div>
             <div style="display:flex; gap:10px;">
-                <a href="https://netbible.org" target="_blank" class="resource-link">NET Bible ↗</a>
-                <a href="https://www.stepbible.org" target="_blank" class="resource-link">STEP Bible ↗</a>
+                <button onclick="launchResource('net')" class="resource-link" style="cursor:pointer;">NET Bible ↗</button>
+                <button onclick="launchResource('step')" class="resource-link" style="cursor:pointer;">STEP Bible ↗</button>
             </div>
         </div>
 
         <div id="variant-modal">
-            <h4>Add Manuscript</h4>
+            <h4 id="modal-title">Add Manuscript</h4>
             
             <div class="quick-keys">
                 <button type="button" class="quick-key" onclick="insertSiglum('𝔓')">𝔓</button>
@@ -266,7 +274,10 @@
             
             <input type="text" id="v-date" placeholder="Date">
             <textarea id="v-reading" placeholder="Reading..."></textarea>
-            <div style="display:flex; gap:10px;"><button class="std-btn" onclick="closeVariantModal()" style="flex:1; background:var(--oxford-navy-dark); color:var(--oxford-cream);">Cancel</button><button class="std-btn" onclick="saveVariant()" style="flex:1; background:var(--oxford-gold); color:var(--oxford-navy);">Save</button></div>
+            <div style="display:flex; gap:10px;">
+                <button class="std-btn" onclick="closeVariantModal()" style="flex:1; background:var(--oxford-navy-dark); color:var(--oxford-cream);">Cancel</button>
+                <button class="std-btn" onclick="saveVariant()" style="flex:1; background:var(--oxford-gold); color:var(--oxford-navy);">Save</button>
+            </div>
         </div>
     </div>
 </div>
@@ -279,6 +290,7 @@
     
     let elements = [], selectedElements = [];
     let apparatusData = [];
+    let editingVariantId = null; 
     let isDragging = false, isResizing = false, isMarquee = false;
     let marqueeStart = {x:0, y:0}, marqueeEnd = {x:0, y:0}, dragOffset = {x:0, y:0};
     let currentResizePoint = null, zoomLevel = 1, snapEnabled = true, rightClickedEl = null;
@@ -308,7 +320,6 @@
         let textToParse = document.getElementById('verseReference').value.trim() || document.getElementById('projectName').value.trim();
         if (!textToParse) return;
         
-        // Smarter parser that ignores hyphens but catches standard verse formats (e.g. 1Peter 3:18-21 or 1 Pet 3.18)
         const match = textToParse.match(/(1\s*|2\s*|3\s*)?([a-zA-Z]+)[\s\.]*(\d+)(?:[\s:\.]+(\d+))?/);
         if(!match) { window.open("https://greekcntr.org", "_blank"); return; }
         
@@ -316,10 +327,35 @@
         const ntBooks = {"matthew":40,"matt":40,"mt":40,"mark":41,"mk":41,"luke":42,"lk":42,"john":43,"jhn":43,"jn":43,"acts":44,"romans":45,"rom":45,"1corinthians":46,"1cor":46,"2corinthians":47,"2cor":47,"galatians":48,"gal":48,"ephesians":49,"eph":49,"philippians":50,"phil":50,"php":50,"colossians":51,"col":51,"1thessalonians":52,"1th":52,"2thessalonians":53,"2th":53,"1timothy":54,"1ti":54,"2timothy":55,"2ti":55,"titus":56,"tit":56,"philemon":57,"phm":57,"hebrews":58,"heb":58,"james":59,"jas":59,"1peter":60,"1pet":60,"2peter":61,"2pet":61,"1john":62,"1jn":62,"2john":63,"2jn":63,"3john":64,"3jn":64,"jude":65,"jud":65,"revelation":66,"rev":66};
         
         if (ntBooks[bookName]) { 
-            // Injects the critical v= flag exactly as CNTR requires
             window.open(`https://greekcntr.org/collation/index.htm?v=${ntBooks[bookName]}${parseInt(match[3]).toString().padStart(3,'0')}${(match[4]?parseInt(match[4]):1).toString().padStart(3,'0')}`, "_blank"); 
         } else {
             window.open("https://greekcntr.org", "_blank");
+        }
+    }
+
+    // NEW: Smart Parser for NET and STEP
+    function launchResource(type) {
+        let textToParse = document.getElementById('verseReference').value.trim() || document.getElementById('projectName').value.trim();
+        if (!textToParse) {
+            window.open(type === 'net' ? "https://netbible.org" : "https://www.stepbible.org", "_blank");
+            return;
+        }
+        
+        const match = textToParse.match(/(1\s*|2\s*|3\s*)?([a-zA-Z]+)[\s\.]*(\d+)(?:[\s:\.]+(\d+))?/);
+        if(!match) { 
+            window.open(type === 'net' ? "https://netbible.org" : "https://www.stepbible.org", "_blank");
+            return; 
+        }
+        
+        const bookNum = match[1] ? match[1].replace(/\s+/g, '') : '';
+        const bookText = match[2];
+        const chapter = match[3];
+        const safeBook = bookNum + bookText;
+        
+        if (type === 'net') {
+            window.open(`https://netbible.org/bible/${safeBook}+${chapter}`, "_blank");
+        } else if (type === 'step') {
+            window.open(`https://www.stepbible.org/?q=reference=${safeBook}.${chapter}`, "_blank");
         }
     }
 
@@ -330,29 +366,57 @@
     }
 
     function toggleApparatus() { document.getElementById('apparatus-drawer').classList.toggle('open'); renderApparatus(); }
-    function openVariantModal() { document.getElementById('variant-modal').classList.add('active'); }
-    function closeVariantModal() { document.getElementById('variant-modal').classList.remove('active'); }
+    
+    function openVariantModal() { 
+        document.getElementById('modal-title').innerText = editingVariantId ? "Edit Manuscript" : "Add Manuscript";
+        document.getElementById('variant-modal').classList.add('active'); 
+    }
+    
+    function editVariant(id) {
+        const v = apparatusData.find(item => item.id === id);
+        if (!v) return;
+        editingVariantId = id;
+        document.getElementById('v-symbol').value = v.symbol || '';
+        document.getElementById('v-conviction').value = v.conviction || '';
+        document.getElementById('v-date').value = v.date || '';
+        document.getElementById('v-reading').value = v.reading || '';
+        openVariantModal();
+    }
+
+    function closeVariantModal() { 
+        document.getElementById('variant-modal').classList.remove('active'); 
+        editingVariantId = null; 
+        document.getElementById('v-symbol').value = '';
+        document.getElementById('v-date').value = '';
+        document.getElementById('v-reading').value = '';
+        document.getElementById('v-conviction').value = ''; 
+    }
     
     function saveVariant() {
         const symbol = document.getElementById('v-symbol').value.trim(); 
         const reading = document.getElementById('v-reading').value.trim();
         const conviction = document.getElementById('v-conviction').value; 
+        const date = document.getElementById('v-date').value.trim();
         
         if (!symbol || !reading) return;
         
-        let targetId = null;
-        let targetWord = null;
-        if (selectedElements.length === 1 && selectedElements[0].type === 'text') {
-            targetId = selectedElements[0].id;
-            targetWord = selectedElements[0].val;
+        if (editingVariantId) {
+            const v = apparatusData.find(item => item.id === editingVariantId);
+            if (v) {
+                v.symbol = symbol;
+                v.reading = reading;
+                v.conviction = conviction;
+                v.date = date;
+            }
+        } else {
+            let targetId = null;
+            let targetWord = null;
+            if (selectedElements.length === 1 && selectedElements[0].type === 'text') {
+                targetId = selectedElements[0].id;
+                targetWord = selectedElements[0].val;
+            }
+            apparatusData.push({ id: Date.now(), targetId, targetWord, symbol, conviction, date, reading });
         }
-
-        apparatusData.push({ id: Date.now(), targetId, targetWord, symbol, conviction, date: document.getElementById('v-date').value.trim(), reading });
-        
-        document.getElementById('v-symbol').value = '';
-        document.getElementById('v-date').value = '';
-        document.getElementById('v-reading').value = '';
-        document.getElementById('v-conviction').value = ''; 
 
         closeVariantModal(); renderApparatus(); autoSave(); draw();
     }
@@ -373,7 +437,14 @@
             
             list.innerHTML += `
             <div class="ms-card">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <button class="edit-btn" onclick="editVariant(${v.id})" title="Edit Variant">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 20h9"></path>
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                    </svg>
+                </button>
+                
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; padding-right: 25px;">
                     <div><span class="ms-symbol">${v.symbol}</span>${targetHtml}</div>
                     <div style="text-align:right;">${badgeHtml}<div class="ms-date" style="margin-top:3px;">${v.date}</div></div>
                 </div>
