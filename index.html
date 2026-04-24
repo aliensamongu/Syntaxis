@@ -289,7 +289,25 @@
     window.addEventListener('DOMContentLoaded', () => { try { const saved = sessionStorage.getItem('syntaxis_autosave'); if (saved) { const d = JSON.parse(saved); elements = d.elements||[]; apparatusData = d.apparatus||[]; document.getElementById('passageInput').value=d.passage||""; document.getElementById('projectName').value=d.projectName||""; document.getElementById('verseReference').value=d.verseReference||""; updateWordBank(); } } catch(e){} updateProjectList(); renderApparatus(); draw(); });
     function saveToApp() { const name = document.getElementById('projectName').value.trim() || prompt("Project Name:"); if(!name) return; const projects = JSON.parse(localStorage.getItem('syntaxis_projects') || '{}'); projects[name] = { passage: document.getElementById('passageInput').value, elements, apparatus: apparatusData, verseReference: document.getElementById('verseReference').value }; localStorage.setItem('syntaxis_projects', JSON.stringify(projects)); updateProjectList(); autoSave(); }
     function loadFromApp(name) { const projects = JSON.parse(localStorage.getItem('syntaxis_projects') || '{}'); if (projects[name]) { elements = projects[name].elements; apparatusData = projects[name].apparatus||[]; document.getElementById('passageInput').value = projects[name].passage; document.getElementById('projectName').value = name; document.getElementById('verseReference').value = projects[name].verseReference; updateWordBank(); selectedElements = []; draw(); renderApparatus(); autoSave(); } }
-    function updateProjectList() { const listDiv = document.getElementById('project-list'); listDiv.innerHTML = ''; const projects = JSON.parse(localStorage.getItem('syntaxis_projects') || '{}'); Object.keys(projects).forEach(name => { listDiv.innerHTML += `<div class="proj-card" onclick="loadFromApp('${name}')"><span>${name}</span></div>`; }); }
+    
+    function deleteProject(name, e) {
+        e.stopPropagation();
+        if(confirm(`Are you sure you want to delete the project "${name}"?`)) {
+            const projects = JSON.parse(localStorage.getItem('syntaxis_projects') || '{}');
+            delete projects[name];
+            localStorage.setItem('syntaxis_projects', JSON.stringify(projects));
+            updateProjectList();
+        }
+    }
+
+    function updateProjectList() { 
+        const listDiv = document.getElementById('project-list'); 
+        listDiv.innerHTML = ''; 
+        const projects = JSON.parse(localStorage.getItem('syntaxis_projects') || '{}'); 
+        Object.keys(projects).forEach(name => { 
+            listDiv.innerHTML += `<div class="proj-card" onclick="loadFromApp('${name}')"><span>${name}</span><button onclick="deleteProject('${name}', event)" style="background:transparent; border:none; color:var(--oxford-crimson); cursor:pointer; font-size:16px; font-weight:bold; padding:0 5px;" title="Delete Project">&times;</button></div>`; 
+        }); 
+    }
 
     function applyStyle(prop, val) { selectedElements.forEach(el => { if (prop === 'bold' && el.type === 'text') el.bold = !el.bold; else el[prop] = val; }); draw(); autoSave(); }
     function setZoom(delta) { zoomLevel = Math.max(0.2, Math.min(3, zoomLevel + delta)); canvas.style.transform = `scale(${zoomLevel})`; canvas.style.transformOrigin = 'top left'; }
@@ -324,6 +342,7 @@
     canvas.ondrop = e => { e.preventDefault(); const rect = canvas.getBoundingClientRect(); const x = snapEnabled ? Math.round(((e.clientX - rect.left) / zoomLevel) / 10) * 10 : (e.clientX - rect.left) / zoomLevel; const y = snapEnabled ? Math.round(((e.clientY - rect.top) / zoomLevel) / 10) * 10 : (e.clientY - rect.top) / zoomLevel; addShape('text', x, y, e.dataTransfer.getData("text/plain")); document.querySelectorAll('.bank-word.selected').forEach(s => s.classList.remove('selected')); };
     
     function addShape(type, x=null, y=null, val=null) { 
+        if (type === 'text' && val === null) { val = prompt("Enter label text:"); if (!val) return; }
         const vp = document.getElementById('canvas-viewport');
         const dX = vp ? (vp.scrollLeft + vp.clientWidth / 2) / zoomLevel : 500;
         const dY = vp ? (vp.scrollTop + vp.clientHeight / 2) / zoomLevel : 500;
@@ -345,6 +364,16 @@
     function fallbackLoad(e) { const f = e.target.files[0]; if(f) { const r = new FileReader(); r.onload = (ev) => processData(ev.target.result); r.readAsText(f); } }
     async function saveProject() { const data = JSON.stringify({ passage: document.getElementById('passageInput').value, elements, apparatus: apparatusData, projectName: document.getElementById('projectName').value, verseReference: document.getElementById('verseReference').value }, null, 2); let s = (document.getElementById('projectName').value||'diagram')+'.json'; try { if (window.showSaveFilePicker) { const h = await window.showSaveFilePicker({ suggestedName: s }); const w = await h.createWritable(); await w.write(data); await w.close(); } else { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([data], {type: "application/json"})); a.download = s; a.click(); } } catch(e){} }
     async function exportImage() { if(!elements.length) return; let minX=4000, minY=4000, maxX=0, maxY=0; elements.forEach(el => { const f=el.flip||1; let x1,x2,y1,y2; if(el.type==='prep_shelf'){ x1=Math.min(el.x,el.x+(el.w*f),el.x+(el.dx_top*f)); x2=Math.max(el.x,el.x+(el.w*f),el.x+(el.dx_top*f)); y1=Math.min(el.y,el.y+el.dy_top); y2=Math.max(el.y,el.y+el.dy_top); } else { x1=Math.min(el.x,el.x+(el.w*f)); x2=Math.max(el.x,el.x+(el.w*f)); y1=el.y-el.h; y2=el.y+el.h; } minX=Math.min(minX,x1); minY=Math.min(minY,y1); maxX=Math.max(maxX,x2); maxY=Math.max(maxY,y2); }); minX=Math.max(0,minX-100); minY=Math.max(0,minY-100); maxX=Math.min(canvas.width,maxX+100); maxY=Math.min(canvas.height,maxY+100); const temp=document.createElement('canvas'); temp.width=maxX-minX; temp.height=maxY-minY; const tCtx=temp.getContext('2d'); tCtx.fillStyle='#ffffff'; tCtx.fillRect(0,0,temp.width,temp.height); tCtx.drawImage(canvas,minX,minY,temp.width,temp.height,0,0,temp.width,temp.height); const a=document.createElement('a'); a.download='export.png'; a.href=temp.toDataURL(); a.click(); }
+
+    canvas.ondblclick = (e) => {
+        if (selectedElements.length === 1 && selectedElements[0].type === 'text') {
+            const newVal = prompt("Edit label:", selectedElements[0].val);
+            if (newVal !== null && newVal.trim() !== '') {
+                selectedElements[0].val = newVal;
+                draw(); autoSave(); updateWordBank();
+            }
+        }
+    };
 
     canvas.onmousedown = (e) => {
         const rect = canvas.getBoundingClientRect(); const mx = (e.clientX - rect.left) / zoomLevel; const my = (e.clientY - rect.top) / zoomLevel;
